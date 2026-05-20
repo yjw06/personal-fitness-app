@@ -20,6 +20,7 @@ export default function SchedulePage() {
     isLoading,
     loadData,
     toggleScheduleCompletion,
+    autoCheckPastItems,
   } = useScheduleStore()
 
   useEffect(() => {
@@ -27,6 +28,30 @@ export default function SchedulePage() {
       loadData(user.uid, today)
     }
   }, [user, today, loadData])
+
+  // ─── 자동 체크: 시간이 지난 스케줄 자동 완료 처리 ─────────────
+  useEffect(() => {
+    if (!user || !schedules.length) return
+
+    // 마운트 즉시 1회 실행
+    autoCheckPastItems(user.uid)
+
+    // 이후 1분마다 실행
+    const interval = setInterval(() => {
+      autoCheckPastItems(user.uid)
+    }, 60 * 1000)
+
+    // 탭 복귀 시 즉시 재확인 (백그라운드에서 시간이 지난 경우)
+    const onVisibility = () => {
+      if (!document.hidden) autoCheckPastItems(user.uid)
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [user, schedules.length, autoCheckPastItems])
 
   // ─── CSV 업로드 ─────────────────────────────────
   const handleUpload = async (e) => {
