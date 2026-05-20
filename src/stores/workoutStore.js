@@ -17,6 +17,7 @@ export const useWorkoutStore = create((set, get) => ({
   currentSet:      1,
   completedSets:   {},   // { exerciseIndex: completedSetCount }
   restSecondsLeft: 0,
+  restEndTime:     null,
 
   // ─── Actions ──────────────────────────────────
   setSelectedDate: (date) => set({ selectedDate: date }),
@@ -73,18 +74,19 @@ export const useWorkoutStore = create((set, get) => ({
         currentSet:      currentSet + 1,
         phase:           'rest',
         restSecondsLeft: restSec,
+        restEndTime:     Date.now() + restSec * 1000,
       })
     }
   },
 
   // 휴식 종료 → 같은 운동 다음 세트로
   afterRest: () => {
-    set({ phase: 'active' })
+    set({ phase: 'active', restEndTime: null })
   },
 
-  // 타이머 틱
-  tickRest: () =>
-    set((s) => ({ restSecondsLeft: Math.max(0, s.restSecondsLeft - 1) })),
+  // 타이머 틱 (절대시간 기반 — remaining을 직접 받음)
+  tickRest: (remaining) =>
+    set({ restSecondsLeft: remaining }),
 
   // 다음 운동 선택 (pick_next에서)
   pickExercise: (index) =>

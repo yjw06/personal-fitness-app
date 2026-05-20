@@ -9,13 +9,20 @@ export const useScheduleStore = create((set, get) => ({
   setDate: (date) => set({ date }),
 
   loadData: async (uid, date) => {
-    set({ isLoading: true })
+    set({ isLoading: true, date })
     const rows = await fetchSchedule(uid, date)
-    set({ schedules: rows || [], isLoading: false })
+    // Firestore에서 가져온 completed 값이 문자열일 수 있으므로 bool로 정규화
+    const normalized = (rows || []).map(row => ({
+      ...row,
+      completed: row.completed === true || row.completed === 'true',
+    }))
+    set({ schedules: normalized, isLoading: false })
   },
 
   toggleScheduleCompletion: async (uid, index) => {
     const { date, schedules } = get()
+    if (!date) return  // 날짜 없으면 무시
+    
     const newSchedules = [...schedules]
     newSchedules[index] = {
       ...newSchedules[index],
