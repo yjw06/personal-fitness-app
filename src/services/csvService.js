@@ -1,6 +1,6 @@
 import Papa from 'papaparse'
 import {
-  doc, setDoc, getDoc, deleteDoc,
+  doc, setDoc, getDoc, deleteDoc, updateDoc,
   collection, getDocs,
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -25,7 +25,9 @@ const scheduleDoc = (uid, date) => doc(db, 'users', uid, 'schedules', date)
 export async function fetchWorkout(uid, date) {
   try {
     const snap = await getDoc(workoutDoc(uid, date))
-    return snap.exists() ? snap.data().rows : null
+    if (!snap.exists()) return null
+    const data = snap.data()
+    return { rows: data.rows, completedSets: data.completedSets || {} }
   } catch {
     return null
   }
@@ -80,6 +82,18 @@ export async function saveWorkoutData(uid, date, rows) {
     rows,
     updatedAt: new Date().toISOString(),
   })
+}
+
+// ─── 운동 진행 상태만 저장 (completedSets) ────────────────────
+export async function saveWorkoutProgress(uid, date, completedSets) {
+  try {
+    await updateDoc(workoutDoc(uid, date), {
+      completedSets,
+      updatedAt: new Date().toISOString(),
+    })
+  } catch {
+    // 문서가 아직 없는 경우 무시
+  }
 }
 
 export async function saveMealData(uid, date, rows) {

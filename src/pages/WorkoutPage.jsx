@@ -17,15 +17,25 @@ export default function WorkoutPage() {
     error, setError,
     phase, completedSets,
     startWorkout, pickExercise, resetWorkout, clearAll,
+    setUid,
   } = useWorkoutStore()
 
   const load = useCallback(async () => {
     if (!user) return
     setLoading(true)
     setError(null)
+    setUid(user.uid)
     try {
-      const data = await fetchWorkout(user.uid, selectedDate)
-      setWorkoutData(data ?? [])
+      const result = await fetchWorkout(user.uid, selectedDate)
+      if (result) {
+        setWorkoutData(result.rows ?? [])
+        // Firebase에서 저장된 운동 진행 상태 복원
+        if (result.completedSets && Object.keys(result.completedSets).length > 0) {
+          useWorkoutStore.setState({ completedSets: result.completedSets })
+        }
+      } else {
+        setWorkoutData([])
+      }
     } catch {
       setError('운동 데이터를 불러오지 못했습니다.')
     } finally {

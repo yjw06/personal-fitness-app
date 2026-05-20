@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { saveWorkoutProgress } from '../services/csvService'
 
 export const useWorkoutStore = create((set, get) => ({
   // ─── 현재 날짜 ────────────────────────────────
@@ -9,6 +10,7 @@ export const useWorkoutStore = create((set, get) => ({
   mealData:    null,
   loading:     false,
   error:       null,
+  uid:         null,  // 현재 사용자 UID (Firebase 저장용)
 
   // ─── 운동 진행 상태 ───────────────────────────
   // phase: 'overview' | 'active' | 'rest' | 'pick_next'
@@ -25,6 +27,15 @@ export const useWorkoutStore = create((set, get) => ({
   setMealData:     (data) => set({ mealData: data }),
   setLoading:      (v)    => set({ loading: v }),
   setError:        (e)    => set({ error: e }),
+  setUid:          (uid)  => set({ uid }),
+
+  // completedSets를 Firebase에 저장하는 헬퍼
+  _persistProgress: (newCompleted) => {
+    const { uid, selectedDate } = get()
+    if (uid && selectedDate) {
+      saveWorkoutProgress(uid, selectedDate, newCompleted).catch(() => {})
+    }
+  },
 
   // 운동 시작 (첫 번째 미완료 운동부터)
   startWorkout: () => {
@@ -77,6 +88,9 @@ export const useWorkoutStore = create((set, get) => ({
         restEndTime:     Date.now() + restSec * 1000,
       })
     }
+
+    // ★ Firebase에 진행 상태 저장
+    get()._persistProgress(newCompleted)
   },
 
   // 휴식 종료 → 같은 운동 다음 세트로
@@ -97,8 +111,11 @@ export const useWorkoutStore = create((set, get) => ({
     set({ phase: 'overview', currentIndex: 0, currentSet: 1 }),
 
   // 오늘 운동 기록 완전 초기화 (새로운 날)
-  clearAll: () =>
-    set({ phase: 'overview', currentIndex: 0, currentSet: 1, completedSets: {} }),
+  clearAll: () => {
+    set({ phase: 'overview', currentIndex: 0, currentSet: 1, completedSets: {} })
+    // Firebase에서도 초기화
+    get()._persistProgress({})
+  },
 
   // 특정 운동이 완전히 끝났는지 확인
   isExerciseDone: (index) => {
