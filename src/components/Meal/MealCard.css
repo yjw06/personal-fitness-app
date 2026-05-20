@@ -1,0 +1,150 @@
+.meal-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: transform 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+.meal-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.meal-card:active { transform: scale(0.99); }
+
+.meal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+
+.meal-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meal-emoji {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.meal-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.meal-time {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  margin-top: 1px;
+  font-weight: 500;
+}
+
+.meal-card-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.meal-calories {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.meal-delete {
+  opacity: 0.4;
+  font-size: 0.875rem;
+  padding: 6px;
+  transition: opacity 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.meal-delete:hover { opacity: 1; }
+
+/* 음식 목록 */
+.food-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: var(--space-md);
+}
+
+.food-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.food-item:last-child { border-bottom: none; }
+
+.food-name {
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  font-weight: 500;
+}
+
+.food-cal {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 매크로 칩 */
+.macro-row {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.macro-chip {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+  padding: 10px 6px;
+  gap: 3px;
+}
+
+.macro-value {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--chip-color);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.macro-value small {
+  font-size: 0.625rem;
+  font-weight: 500;
+  margin-left: 1px;
+  opacity: 0.7;
+}
+
+.macro-label {
+  font-size: 0.5625rem;
+  color: var(--color-text-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

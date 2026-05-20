@@ -1,0 +1,69 @@
+.meal-page { display: flex; flex-direction: column; gap: var(--space-lg); }
+
+.meal-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  padding: var(--space-lg);
+}
+
+.summary-item {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.summary-val {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-unit {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  font-weight: 600;
+}
+
+.summary-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--color-surface-3);
+}
+
+.protein-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 130px;
+}
+
+.meal-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.upload-label { cursor: pointer; }
+
+.meal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.error-msg {
+  font-size: 0.8125rem;
+  color: var(--color-danger);
+  padding: 10px var(--space-md);
+  background: rgba(239,68,68,0.08);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  border: 1px solid rgba(239,68,68,0.15);
+}
+
+.spin-anim { animation: spin 0.6s linear infinite; }

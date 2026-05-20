@@ -1,0 +1,95 @@
+.exercise-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-lg);
+  cursor: default;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+  overflow: hidden;
+}
+
+.exercise-card[role="button"] { cursor: pointer; }
+.exercise-card[role="button"]:hover {
+  background: var(--color-surface-2);
+  border-color: rgba(200,255,0,0.15);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.exercise-card[role="button"]:active { transform: scale(0.98); }
+
+.exercise-card.is-current {
+  border-color: rgba(200,255,0,0.3);
+  background: rgba(200,255,0,0.04);
+  box-shadow: 0 0 0 1px rgba(200,255,0,0.15);
+}
+
+.exercise-card.is-done { opacity: 0.45; }
+.exercise-card.is-done .ex-order {
+  background: var(--color-success);
+  color: #fff;
+  border-color: var(--color-success);
+}
+
+/* 번호 원 */
+.ex-order {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-2);
+  flex-shrink: 0;
+}
+
+.ex-info { flex: 1; min-width: 0; }
+
+.ex-name-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.ex-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.ex-part-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.02em;
+}
+
+.ex-meta {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.ex-rest { color: var(--color-text-3); }
+
+/* 현재 운동 표시 점 */
+.ex-current-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 0 var(--color-primary);
+  animation: pulse-ring 1.4s ease-out infinite;
+  flex-shrink: 0;
+}
