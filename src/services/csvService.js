@@ -1,6 +1,6 @@
 import Papa from 'papaparse'
 import {
-  doc, setDoc, getDoc, deleteDoc, updateDoc,
+  doc, setDoc, getDoc, deleteDoc,
   collection, getDocs,
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -87,12 +87,12 @@ export async function saveWorkoutData(uid, date, rows) {
 // ─── 운동 진행 상태만 저장 (completedSets) ────────────────────
 export async function saveWorkoutProgress(uid, date, completedSets) {
   try {
-    await updateDoc(workoutDoc(uid, date), {
+    await setDoc(workoutDoc(uid, date), {
       completedSets,
       updatedAt: new Date().toISOString(),
-    })
-  } catch {
-    // 문서가 아직 없는 경우 무시
+    }, { merge: true })
+  } catch (err) {
+    console.error('[saveWorkoutProgress] Firebase 저장 실패:', err)
   }
 }
 
