@@ -1,17 +1,35 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
-import LoginPage  from './pages/LoginPage'
-import WorkoutPage from './pages/WorkoutPage'
-import MealPage   from './pages/MealPage'
-import SchedulePage from './pages/SchedulePage'
-import Header     from './components/Layout/Header'
-import BottomNav  from './components/Layout/BottomNav'
+import { useMemoryStore } from './stores/memoryStore'
+import { useAIStore } from './stores/aiStore'
+import LoginPage      from './pages/LoginPage'
+import WorkoutPage    from './pages/WorkoutPage'
+import MealPage       from './pages/MealPage'
+import SchedulePage   from './pages/SchedulePage'
+import BodyPage       from './pages/BodyPage'
+import CoachPage      from './pages/CoachPage'
+import AssistantPage  from './pages/AssistantPage'
+import Header         from './components/Layout/Header'
+import BottomNav      from './components/Layout/BottomNav'
+import ToastContainer from './components/Toast/ToastContainer'
 import './index.css'
 
 export default function App() {
   const { user, loading } = useAuth()
+  const resetMemory   = useMemoryStore((s) => s.reset)
+  const loadAIForUser = useAIStore((s) => s.loadForUser)
 
-  // Firebase 인증 상태 초기 확인 중 (스플래시)
+  // 사용자 전환 시 메모리/채팅 격리
+  useEffect(() => {
+    if (!user) {
+      resetMemory()
+      loadAIForUser(null)
+    } else {
+      loadAIForUser(user.uid)
+    }
+  }, [user, resetMemory, loadAIForUser])
+
   if (loading) {
     return (
       <div style={{
@@ -25,20 +43,29 @@ export default function App() {
     )
   }
 
-  // 미로그인 → 로그인 페이지
-  if (!user) return <LoginPage />
+  if (!user) {
+    return (
+      <>
+        <LoginPage />
+        <ToastContainer />
+      </>
+    )
+  }
 
-  // 로그인 완료 → 앱
   return (
     <BrowserRouter basename="/personal-fitness-app">
       <div className="app-layout">
         <Header user={user} />
+        <ToastContainer />
         <Routes>
-          <Route path="/"        element={<Navigate to="/schedule" replace />} />
-          <Route path="/schedule" element={<SchedulePage />} />
-          <Route path="/workout" element={<WorkoutPage />} />
-          <Route path="/meal"    element={<MealPage />} />
-          <Route path="*"        element={<Navigate to="/schedule" replace />} />
+          <Route path="/"          element={<Navigate to="/schedule" replace />} />
+          <Route path="/schedule"  element={<SchedulePage />} />
+          <Route path="/workout"   element={<WorkoutPage />} />
+          <Route path="/meal"      element={<MealPage />} />
+          <Route path="/body"      element={<BodyPage />} />
+          <Route path="/coach"     element={<CoachPage />} />
+          <Route path="/assistant" element={<AssistantPage />} />
+          <Route path="*"          element={<Navigate to="/schedule" replace />} />
         </Routes>
         <BottomNav />
       </div>

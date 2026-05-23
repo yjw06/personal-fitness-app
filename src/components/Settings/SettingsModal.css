@@ -1,0 +1,428 @@
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.settings-modal {
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 88dvh;
+  overflow-y: auto;
+}
+
+.set-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+.set-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.set-section-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: var(--space-sm);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px var(--space-sm);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.toggle-row:hover {
+  background: var(--color-surface-3);
+}
+
+.toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  font-size: 1.125rem;
+  flex-shrink: 0;
+}
+
+.toggle-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.toggle-desc {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  line-height: 1.3;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+.toggle-switch.on {
+  background: var(--color-primary);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+.toggle-switch.on .toggle-knob {
+  transform: translateX(18px);
+}
+
+.set-volume-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: 10px var(--space-sm);
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+}
+.set-volume-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+.set-volume-val {
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.set-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-3);
+  outline: none;
+  cursor: pointer;
+}
+.set-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 12px rgba(200,255,0,0.5);
+  cursor: pointer;
+}
+.set-volume-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: none;
+  cursor: pointer;
+}
+
+/* AI Coach 키 입력 */
+.set-key-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) 10px;
+}
+
+.set-key-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+  font-weight: 600;
+}
+
+.set-key-link {
+  font-size: 0.6875rem;
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.set-key-link:hover {
+  text-decoration: underline;
+}
+
+.set-key-input-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.set-key-input {
+  flex: 1;
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--color-text);
+  font-family: monospace, monospace;
+  font-size: 0.75rem;
+  outline: none;
+}
+.set-key-input:focus {
+  border-color: var(--color-primary-mid);
+}
+
+.set-key-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.set-key-save {
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  flex: 1;
+}
+
+.set-key-hint {
+  font-size: 0.625rem;
+  color: var(--color-text-3);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.set-model-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.set-model-select {
+  width: 100%;
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+}
+.set-model-select:focus {
+  border-color: var(--color-primary-mid);
+}
+
+/* ─── 마스터플랜 메모리 ─── */
+.set-plan-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.set-plan-toggle:hover {
+  background: var(--color-surface-3);
+  border-color: var(--color-primary-mid);
+}
+.set-plan-toggle > span {
+  flex: 1;
+  text-align: left;
+}
+
+.set-plan-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+}
+
+.set-plan-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+  line-height: 1.5;
+  padding: 0 4px;
+}
+
+.set-plan-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.set-plan-field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.set-plan-field-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.set-plan-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  color: var(--color-text-2);
+  font-size: 0.625rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.set-plan-upload-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary-mid);
+}
+
+.set-plan-textarea {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+}
+.set-plan-textarea:focus {
+  border-color: var(--color-primary-mid);
+}
+
+.set-plan-token-count {
+  font-size: 0.625rem;
+  color: var(--color-text-3);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.set-plan-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+.set-plan-actions .btn {
+  flex: 1;
+  font-size: 0.75rem;
+  padding: 10px;
+}
+
+/* AI 메모 리스트 */
+.set-notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-sm) 0;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.set-note-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+}
+
+.set-note-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.set-note-key {
+  font-size: 0.625rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.set-note-value {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.set-note-date {
+  font-size: 0.625rem;
+  color: var(--color-text-3);
+}
+
+.set-note-del {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}

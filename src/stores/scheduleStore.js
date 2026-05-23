@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { fetchSchedule, saveScheduleData } from '../services/csvService'
 
-// "HH:MM" 문자열을 오늘 날짜의 분(minutes) 값으로 변환
 const timeToMinutes = (timeStr) => {
   if (!timeStr) return Infinity
   const [h, m] = timeStr.split(':').map(Number)
@@ -14,13 +13,16 @@ export const useScheduleStore = create((set, get) => ({
   schedules: [],
   isLoading: false,
 
+  // 사용자가 수동으로 체크 해제한 항목들 (자동 재체크 방지)
+  // 날짜별로 Set을 관리
+  manuallyUnchecked: {}, // { 'YYYYMMDD': Set<number> }
+
   setDate: (date) => set({ date }),
 
   loadData: async (uid, date) => {
     set({ isLoading: true, date })
     const rows = await fetchSchedule(uid, date)
-    // Firestore에서 가져온 completed 값이 문자열일 수 있으므로 bool로 정규화
-    const normalized = (rows || []).map(row => ({
+    const normalized = (rows || []).map((row) => ({
       ...row,
       completed: row.completed === true || row.completed === 'true',
     }))
@@ -28,31 +30,44 @@ export const useScheduleStore = create((set, get) => ({
   },
 
   toggleScheduleCompletion: async (uid, index) => {
-    const { date, schedules } = get()
-    if (!date) return  // 날짜 없으면 무시
+    const { date, schedules, manuallyUnchecked } = get()
+    if (!date) return
 
+    const wasCompleted = schedules[index]?.completed
     const newSchedules = [...schedules]
     newSchedules[index] = {
       ...newSchedules[index],
-      completed: !newSchedules[index].completed,
+      completed: !wasCompleted,
     }
 
-    set({ schedules: newSchedules })
+    // 완료 → 미완료 전환 시 manuallyUnchecked에 추가
+    const setForDate = new Set(manuallyUnchecked[date] || [])
+    if (wasCompleted) {
+      setForDate.add(index)
+    } else {
+      // 미완료 → 완료 전환 시 manuallyUnchecked에서 제거
+      setForDate.delete(index)
+    }
+
+    set({
+      schedules: newSchedules,
+      manuallyUnchecked: { ...manuallyUnchecked, [date]: setForDate },
+    })
     await saveScheduleData(uid, date, newSchedules)
   },
 
-  // ─── 시간이 지난 항목을 자동으로 완료 처리 ────────────────────
   autoCheckPastItems: async (uid) => {
-    const { date, schedules } = get()
+    const { date, schedules, manuallyUnchecked } = get()
     if (!date || !schedules.length) return
 
     const now = new Date()
     const currentMinutes = now.getHours() * 60 + now.getMinutes()
+    const unchecked = manuallyUnchecked[date] || new Set()
 
-    // 아직 미완료이면서 시간이 지난 항목만 찾기
     let changed = false
-    const newSchedules = schedules.map(item => {
-      if (item.completed) return item  // 이미 완료된 것은 건드리지 않음
+    const newSchedules = schedules.map((item, idx) => {
+      if (item.completed) return item
+      if (unchecked.has(idx)) return item  // 수동 해제 항목 건너뜀
       const itemMinutes = timeToMinutes(item.time)
       if (itemMinutes <= currentMinutes) {
         changed = true
@@ -61,9 +76,44 @@ export const useScheduleStore = create((set, get) => ({
       return item
     })
 
-    if (!changed) return  // 변경사항 없으면 Firebase 저장 안 함
+    if (!changed) return
 
     set({ schedules: newSchedules })
     await saveScheduleData(uid, date, newSchedules)
   },
+
+  // 날짜가 바뀌면 manuallyUnchecked 초기화 (메모리 절약)
+  clearManuallyUnchecked: () => set({ manuallyUnchecked: {} }),
+
+  // 선택 삭제: indexSet의 항목 제거 + manuallyUnchecked 인덱스 시프트
+  // newRows 길이가 0이면 호출 측에서 별도로 deleteSchedule을 처리해야 함
+  removeIndices: async (uid, indexSet) => {
+    const { date, schedules, manuallyUnchecked } = get()
+    if (!date || !schedules.length || !indexSet?.size) return null
+
+    const newRows = schedules.filter((_, i) => !indexSet.has(i))
+
+    // manuallyUnchecked 시프트
+    const oldUnchecked = manuallyUnchecked[date] || new Set()
+    const newUnchecked = new Set()
+    let newIdx = 0
+    schedules.forEach((_, oldIdx) => {
+      if (indexSet.has(oldIdx)) return
+      if (oldUnchecked.has(oldIdx)) newUnchecked.add(newIdx)
+      newIdx++
+    })
+
+    set({
+      schedules: newRows,
+      manuallyUnchecked: { ...manuallyUnchecked, [date]: newUnchecked },
+    })
+
+    if (newRows.length > 0) {
+      await saveScheduleData(uid, date, newRows)
+    }
+    return newRows
+  },
+
+  // 외부에서 schedules 전체를 비우는 경우 (전체 삭제)
+  clearSchedules: () => set({ schedules: [] }),
 }))

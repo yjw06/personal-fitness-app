@@ -1,75 +1,92 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useWorkoutStore } from '../../stores/workoutStore'
+import { useSettingsStore } from '../../stores/settingsStore'
+import {
+  triggerRestEndAlert,
+  clearRestAlert,
+  unlockAudio,
+  acquireWakeLock,
+  releaseWakeLock,
+  reacquireWakeLockIfNeeded,
+  playTickSound,
+} from '../../services/restAlert'
+import { Volume2, VolumeX, Plus, Minus } from 'lucide-react'
 import './RestTimer.css'
-
-// 알림 사운드 생성 (Web Audio API 기반 - 파일 필요 없음)
-function playAlertSound() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    // 3회 연속 비프음
-    const playBeep = (startTime, freq, duration) => {
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.value = freq
-      gain.gain.setValueAtTime(0.5, startTime)
-      gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration)
-      osc.start(startTime)
-      osc.stop(startTime + duration)
-    }
-    const now = ctx.currentTime
-    playBeep(now, 880, 0.15)         // 높은 라
-    playBeep(now + 0.2, 880, 0.15)
-    playBeep(now + 0.4, 1108.73, 0.3) // 높은 도#
-  } catch {
-    // Audio API 미지원 시 무시
-  }
-}
 
 export default function RestTimer() {
   const {
     workoutData, currentIndex, currentSet, restSecondsLeft,
-    restEndTime, tickRest, afterRest,
+    restEndTime, tickRest, afterRest, extendRest,
   } = useWorkoutStore()
 
+  const settings = useSettingsStore()
   const rafRef = useRef(null)
-  const hasPlayedSound = useRef(false)
+  const hasFiredRef = useRef(false)
+  const lastTickSecondRef = useRef(null)
+  const [alertActive, setAlertActive] = useState(false)
 
-  // requestAnimationFrame 기반 카운트다운 (백그라운드에서도 정확)
+  // 휴식 종료 처리
+  const handleEnd = useCallback(() => {
+    if (hasFiredRef.current) return
+    hasFiredRef.current = true
+
+    const exercise = workoutData?.[currentIndex]
+    triggerRestEndAlert({
+      sound:        settings.soundEnabled,
+      vibration:    settings.vibrateEnabled,
+      notification: settings.notifyEnabled,
+      volume:       settings.volume,
+      repeat:       settings.repeatAlert,
+      exerciseName: exercise?.exercise_name || '',
+    })
+    setAlertActive(true)
+  }, [
+    workoutData, currentIndex, currentSet,
+    settings.soundEnabled,
+    settings.vibrateEnabled, settings.notifyEnabled,
+    settings.volume, settings.repeatAlert,
+  ])
+
+  // 카운트다운 (requestAnimationFrame)
   const tick = useCallback(() => {
-    const now = Date.now()
     const endTime = restEndTime
     if (!endTime) return
 
+    const now = Date.now()
     const remaining = Math.max(0, Math.ceil((endTime - now) / 1000))
     tickRest(remaining)
 
+    // 마지막 3초 카운트 비프
+    if (remaining > 0 && remaining <= 3 && lastTickSecondRef.current !== remaining) {
+      lastTickSecondRef.current = remaining
+      if (settings.soundEnabled) playTickSound(settings.volume * 0.6)
+    }
+
     if (remaining <= 0) {
-      if (!hasPlayedSound.current) {
-        playAlertSound()
-        // 진동도 시도 (모바일)
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 300])
-        hasPlayedSound.current = true
-      }
-      setTimeout(afterRest, 600)
+      handleEnd()
       return
     }
 
     rafRef.current = requestAnimationFrame(tick)
-  }, [restEndTime, tickRest, afterRest])
+  }, [restEndTime, tickRest, handleEnd, settings.soundEnabled, settings.volume])
 
+  // 휴식 시작 시 — Wake Lock 획득 + 오디오 해제
   useEffect(() => {
     if (!restEndTime) return
-    hasPlayedSound.current = false
+    hasFiredRef.current = false
+    lastTickSecondRef.current = null
+    setAlertActive(false)
+
+    unlockAudio()
+    if (settings.wakeLockEnabled) acquireWakeLock()
+
     rafRef.current = requestAnimationFrame(tick)
 
-    // 탭 복귀 시 즉시 동기화
     const onVisibility = () => {
       if (!document.hidden) {
         cancelAnimationFrame(rafRef.current)
         rafRef.current = requestAnimationFrame(tick)
+        reacquireWakeLockIfNeeded()
       }
     }
     document.addEventListener('visibilitychange', onVisibility)
@@ -77,24 +94,43 @@ export default function RestTimer() {
     return () => {
       cancelAnimationFrame(rafRef.current)
       document.removeEventListener('visibilitychange', onVisibility)
+      releaseWakeLock()
+      clearRestAlert()
     }
-  }, [restEndTime, tick])
+  }, [restEndTime, tick, settings.wakeLockEnabled])
+
+  // "다음 세트" 누르면 알림 중단 + 다음 세트로
+  const handleNext = () => {
+    clearRestAlert()
+    setAlertActive(false)
+    afterRest()
+  }
+
+  // ±15초 조절
+  const handleAdjust = (delta) => {
+    extendRest(delta)
+  }
 
   const exercise = workoutData?.[currentIndex]
   const totalSets = parseInt(exercise?.sets) || 3
-  const totalSec  = parseInt(exercise?.rest_seconds) || 60
-  const pct       = Math.round(((totalSec - restSecondsLeft) / totalSec) * 100)
+  const totalSec  = Math.max(1, parseInt(exercise?.rest_seconds) || 60)
+  const pct       = Math.max(0, Math.min(100, Math.round(((totalSec - restSecondsLeft) / totalSec) * 100)))
 
-  // 원형 SVG 진행 바
   const R = 56
   const C = 2 * Math.PI * R
   const strokeDashoffset = C - (pct / 100) * C
 
+  const mins = Math.floor(restSecondsLeft / 60)
+  const secs = restSecondsLeft % 60
+  const display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}`
+
   return (
-    <div className="rest-timer animate-fadeInUp">
-      <h2 className="rest-title">휴식 중 ☕</h2>
+    <div className={`rest-timer animate-fadeInUp ${alertActive ? 'alert-active' : ''}`}>
+      {alertActive && <div className="alert-flash" aria-hidden="true" />}
+
+      <h2 className="rest-title">{alertActive ? '🔔 휴식 종료!' : '휴식 중 ☕'}</h2>
       <p className="rest-next">
-        세트 <strong>{currentSet}</strong> / {totalSets} 준비
+        다음: <strong>{exercise?.exercise_name}</strong> · 세트 <strong>{currentSet}</strong> / {totalSets}
       </p>
 
       {/* 원형 타이머 */}
@@ -103,24 +139,56 @@ export default function RestTimer() {
           <circle cx="64" cy="64" r={R} className="ring-bg" />
           <circle
             cx="64" cy="64" r={R}
-            className="ring-fill"
+            className={`ring-fill ${alertActive ? 'ring-done' : ''} ${restSecondsLeft <= 3 && restSecondsLeft > 0 ? 'ring-warn' : ''}`}
             strokeDasharray={C}
             strokeDashoffset={strokeDashoffset}
           />
         </svg>
         <div className="timer-center">
-          <span className="timer-seconds">{restSecondsLeft}</span>
-          <span className="timer-unit">SEC</span>
+          <span className={`timer-seconds ${restSecondsLeft <= 3 && restSecondsLeft > 0 ? 'timer-warn' : ''}`}>
+            {display}
+          </span>
+          <span className="timer-unit">{mins > 0 ? 'MIN' : 'SEC'}</span>
         </div>
       </div>
 
-      {/* 건너뛰기 */}
+      {/* ± 시간 조절 */}
+      <div className="rest-adjust-row">
+        <button
+          className="btn btn-ghost rest-adjust-btn"
+          onClick={() => handleAdjust(-15)}
+          aria-label="휴식 15초 줄이기"
+          disabled={alertActive}
+        >
+          <Minus size={14} /> 15초
+        </button>
+        <button
+          className="btn btn-ghost rest-adjust-btn"
+          onClick={() => handleAdjust(15)}
+          aria-label="휴식 15초 늘리기"
+          disabled={alertActive}
+        >
+          <Plus size={14} /> 15초
+        </button>
+      </div>
+
+      {/* 빠른 토글: 소리 on/off */}
+      <button
+        className="btn-icon rest-mute-btn"
+        onClick={() => settings.update({ soundEnabled: !settings.soundEnabled })}
+        aria-label={settings.soundEnabled ? '소리 끄기' : '소리 켜기'}
+        title={settings.soundEnabled ? '소리 끄기' : '소리 켜기'}
+      >
+        {settings.soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+      </button>
+
+      {/* 메인 액션 버튼 */}
       <button
         id="btn-skip-rest"
-        className="btn btn-primary btn-full"
-        onClick={afterRest}
+        className={`btn ${alertActive ? 'btn-primary alert-btn' : 'btn-primary'} btn-full`}
+        onClick={handleNext}
       >
-        다음 세트 바로 시작 →
+        {alertActive ? '✓ 다음 세트 시작!' : '다음 세트 바로 시작 →'}
       </button>
     </div>
   )

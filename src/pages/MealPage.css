@@ -1,11 +1,64 @@
 .meal-page { display: flex; flex-direction: column; gap: var(--space-lg); }
 
-.meal-summary {
+/* 선택 모드 평탄 리스트 */
+.meal-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.meal-select-item {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
-  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: 10px 12px;
+  background: var(--color-surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.msl-emoji {
+  font-size: 1.25rem;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.msl-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.msl-type {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.msl-name {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  word-break: break-word;
+}
+.msl-cal {
+  font-size: 0.75rem;
+  color: var(--color-text-2);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.meal-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
   padding: var(--space-lg);
+}
+
+.summary-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
 }
 
 .summary-item {
@@ -28,18 +81,57 @@
   font-weight: 600;
 }
 
-.summary-divider {
-  width: 1px;
-  height: 24px;
-  background: var(--color-surface-3);
+.summary-target {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
 }
 
-.protein-bar-wrap {
+.macro-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.macro-bar-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-sm);
+}
+
+.macro-bar-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  width: 56px;
+  flex-shrink: 0;
+}
+
+.macro-bar-track {
   flex: 1;
-  min-width: 130px;
+  height: 6px;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.macro-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.macro-bar-val {
+  font-size: 0.6875rem;
+  color: var(--color-text-2);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  min-width: 64px;
+  text-align: right;
 }
 
 .meal-actions {

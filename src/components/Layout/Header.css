@@ -21,20 +21,56 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+  flex: 1;
 }
 
 .header-title {
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   font-weight: 800;
   color: var(--color-text);
   letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
-.header-date {
+.header-past-tag {
+  font-size: 0.625rem;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.header-past-tag.past {
+  background: rgba(250,204,21,0.15);
+  color: var(--color-warning);
+}
+.header-past-tag.future {
+  background: rgba(56,189,248,0.15);
+  color: var(--color-info, #38bdf8);
+}
+
+.header-date-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
   font-size: 0.6875rem;
   color: var(--color-text-3);
   display: flex;
   align-items: center;
   gap: 4px;
   font-weight: 500;
+  padding: 2px 0;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+.header-date-btn:hover {
+  color: var(--color-primary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
 }

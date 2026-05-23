@@ -8,6 +8,29 @@
 
 .upload-label { cursor: pointer; }
 
+/* 선택 모드 wrapper */
+.exercise-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.exercise-select-wrap:hover {
+  border-color: var(--color-primary-mid);
+}
+.exercise-select-wrap.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-dim);
+}
+.exercise-select-card {
+  flex: 1;
+  pointer-events: none;  /* 카드 자체 클릭은 막고 wrapper의 toggle만 */
+}
+
 .workout-summary {
   display: flex;
   align-items: center;
@@ -80,7 +103,7 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-lg) 0;
+  padding: var(--space-lg) 0 var(--space-sm);
   text-align: center;
 }
 
@@ -93,6 +116,40 @@
   font-size: 0.8125rem;
   color: var(--color-text-3);
   font-weight: 500;
+}
+
+.pick-next-recommended {
+  font-size: 0.6875rem;
+  color: var(--color-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: var(--space-md);
+  margin-bottom: 6px;
+}
+
+.pick-next-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pick-recommended-wrap {
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  padding: 2px;
+  background: var(--color-primary-dim);
+  box-shadow: 0 0 24px rgba(200,255,0,0.18);
+  animation: glow-pulse 2.5s ease-in-out infinite;
+}
+
+.pick-next-rest-label {
+  font-size: 0.625rem;
+  color: var(--color-text-3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: var(--space-md);
 }
 
 /* All Done Banner */

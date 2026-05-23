@@ -1,0 +1,309 @@
+// Gemini API 호출 — JSON Schema 모드 + Chat 모드 분기
+// JSON 모드: responseSchema 기반 구조화 출력 (도구 환각 X)
+// Chat 모드: 자유 대화 + save_to_memory 단일 도구
+
+const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta'
+const DEFAULT_MODEL = 'gemini-2.5-flash'
+
+// 503 high demand 발생 시 자동 폴백 체인
+const FALLBACK_CHAIN = {
+  'gemini-2.5-pro':        ['gemini-2.5-flash'],
+  'gemini-2.5-flash':      [],
+  'gemini-2.5-flash-lite': [],
+}
+
+export const AVAILABLE_MODELS = [
+  { id: 'gemini-2.5-flash',      label: 'Flash (균형, 권장)' },
+  { id: 'gemini-2.5-pro',        label: 'Pro (최고 품질, 느림·혼잡)' },
+  { id: 'gemini-2.5-flash-lite', label: 'Flash Lite (간단 대화용)' },
+]
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504])
+
+const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토']
+
+// 로컬 시간 기준 오늘 YYYYMMDD (UTC 변환 X)
+export function todayYmd() {
+  const d = new Date()
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
+}
+
+// ─── Chat 모드용 단일 도구: save_to_memory ──────────────────
+// JSON 모드는 도구 자체를 안 쓰지만, 자유 대화에선 이거 하나만 살림
+export const CHAT_TOOLS = [
+  {
+    name: 'save_to_memory',
+    description: '대화 중 알게 된 중요한 정보를 영구 메모리에 저장합니다. 예: 부상, 선호도, 목표 변경, 일정 변경, 컨디션 등. 이후 모든 대화·계획 생성에서 자동 참조됩니다.',
+    parameters: {
+      type: 'object',
+      properties: {
+        key:   { type: 'string', description: '메모 카테고리 (예: injury, preference, goal_change, schedule_change, condition)' },
+        value: { type: 'string', description: '실제 내용 (예: "왼쪽 무릎 통증 시작, 5/23")' },
+      },
+      required: ['key', 'value'],
+    },
+  },
+]
+
+// ─── Chat 모드용 간략 시스템 프롬프트 ──────────────────────
+export function buildChatSystemInstruction(memory = {}, autoSummary = {}) {
+  const today = new Date()
+  const ymd = todayYmd()
+  const dayName = DAY_NAMES[today.getDay()]
+  const dateStr = today.toLocaleDateString('ko-KR', {
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
+  })
+
+  let prompt = `You are this user's personal fitness coach (free chat mode).
+
+# Output Language
+Respond in natural Korean (자연스러운 존댓말). No "다나까" style.
+
+# Today
+${dateStr} — YYYYMMDD: ${ymd} (${dayName}요일)
+
+# How to help
+- Free conversation: answer the user's questions about training, nutrition, recovery, motivation, etc.
+- When the user shares new persistent info (injury, schedule change, preference, condition), call \`save_to_memory\` so it's remembered for future plan generation.
+- To generate workouts/meals/schedules, the user should use slash commands (/운동, /식단, /스케줄, /오늘) — those bypass chat and call structured generation directly. If they ask in chat, gently suggest the slash command.
+- Keep responses short and useful. No code blocks, no long lists unless asked.
+`
+
+  if (memory.profile)      prompt += `\n# User Profile\n${memory.profile}\n`
+  if (memory.coachPersona) prompt += `\n# Coach Persona\n${memory.coachPersona}\n`
+
+  if (memory.aiNotes?.length) {
+    prompt += `\n# Memory Notes\n`
+    memory.aiNotes.forEach((n) => {
+      const d = n.ts ? new Date(n.ts).toISOString().slice(0,10) : ''
+      prompt += `- ${d ? `[${d}] ` : ''}${n.key}: ${n.value}\n`
+    })
+  }
+
+  if (autoSummary?.recentBody?.length) {
+    prompt += `\n# Recent Body Records\n`
+    autoSummary.recentBody.forEach((r) => {
+      const parts = []
+      if (r.weight_kg)      parts.push(`weight ${r.weight_kg}kg`)
+      if (r.body_fat_pct)   parts.push(`fat ${r.body_fat_pct}%`)
+      if (r.muscle_mass_kg) parts.push(`muscle ${r.muscle_mass_kg}kg`)
+      prompt += `- ${r.date || '-'}: ${parts.join(' / ')}\n`
+    })
+  }
+
+  if (autoSummary?.recentWorkouts?.length) {
+    prompt += `\n# Last 14 Days Workout\n`
+    autoSummary.recentWorkouts.forEach((w) => {
+      if (w.setsDone === 0) prompt += `- ${w.date}: rest\n`
+      else prompt += `- ${w.date}: ${w.parts} · ${w.exerciseCount} ex · ${w.setsDone}/${w.setsTotal} sets\n`
+    })
+  }
+
+  return prompt
+}
+
+// ─── 단일 호출 ──────────────────────────────────────────────
+async function callOnce({ apiKey, model, body }) {
+  const url = `${BASE_URL}/models/${model}:generateContent?key=${apiKey}`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const errText = await res.text()
+    let msg = `Gemini API 오류 (${res.status})`
+    try { msg = JSON.parse(errText).error?.message || msg } catch { msg = errText.slice(0, 200) || msg }
+    const err = new Error(msg); err.status = res.status; throw err
+  }
+  return res.json()
+}
+
+// ─── 재시도 + 폴백 wrapper ─────────────────────────────────
+async function callWithRetry({ apiKey, model, body, onModelSwitch }) {
+  if (!apiKey) throw new Error('Gemini API 키가 설정되지 않았습니다. 설정에서 등록해주세요.')
+
+  const chain = [model, ...(FALLBACK_CHAIN[model] || [])]
+  let lastErr
+
+  for (let m = 0; m < chain.length; m++) {
+    const currentModel = chain[m]
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await callOnce({ apiKey, model: currentModel, body })
+      } catch (err) {
+        lastErr = err
+        const transient = TRANSIENT_STATUSES.has(err.status)
+        const isOverload = err.status === 503 ||
+          /overload|unavailable|high demand|currently experiencing/i.test(err.message || '')
+        if (!transient) throw err
+        if (attempt === 0 && !isOverload) { await sleep(800); continue }
+        if (m < chain.length - 1) {
+          try { onModelSwitch?.(currentModel, chain[m + 1], err.message) } catch {}
+        }
+        break
+      }
+    }
+  }
+  throw lastErr || new Error('Gemini 호출 실패')
+}
+
+// ─── JSON 모드 ─────────────────────────────────────────────
+// Gemini responseSchema로 구조화 출력 강제 → 도구 호출 X, 환각 X
+// JSON 파싱 실패/응답 잘림 시 자동 재시도
+export async function callGeminiJSON({
+  apiKey, model = DEFAULT_MODEL,
+  system, schema,
+  onModelSwitch,
+  maxOutputTokens = 16384,  // 식단처럼 긴 JSON 대응 — 기본을 넉넉히
+}) {
+  const body = {
+    contents: [{ role: 'user', parts: [{ text: '작업 시작' }] }],
+    systemInstruction: { parts: [{ text: system }] },
+    generationConfig: {
+      temperature: 0.7,
+      topP: 0.95,
+      maxOutputTokens,
+      responseMimeType: 'application/json',
+      responseSchema: schema,
+    },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
+  }
+
+  // 최대 2회 시도 (파싱 실패 / 잘림 시 한 번 재시도)
+  let lastErr
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await callWithRetry({ apiKey, model, body, onModelSwitch })
+      const candidate = response?.candidates?.[0]
+      const finishReason = candidate?.finishReason || ''
+      const parts = candidate?.content?.parts || []
+      const text = parts.filter((p) => p.text).map((p) => p.text).join('')
+
+      if (!text) {
+        throw new Error('AI가 빈 응답을 반환했어요.')
+      }
+
+      // 응답이 토큰 한계로 잘렸으면 — JSON 파싱 시도 후 실패하면 의미 있는 에러
+      const wasTruncated = finishReason === 'MAX_TOKENS' || finishReason === 'OTHER'
+
+      let data
+      try {
+        data = JSON.parse(text)
+      } catch (parseErr) {
+        // 잘렸을 가능성이 크면 부분 복구 시도 (배열 닫기)
+        if (wasTruncated) {
+          const repaired = tryRepairTruncatedJSON(text)
+          if (repaired) {
+            data = repaired
+          } else {
+            throw new Error(
+              `AI 응답이 너무 길어 잘렸어요 (식단·스케줄이 큰 경우 흔함). ` +
+              `더 큰 모델(Pro) 사용을 권장하거나 마스터플랜을 짧게 줄여 보세요.`
+            )
+          }
+        } else {
+          throw new Error(`AI 응답이 올바른 JSON이 아닙니다: ${parseErr.message}`)
+        }
+      }
+
+      return { data, raw: text, truncated: wasTruncated }
+    } catch (err) {
+      lastErr = err
+      // 다음 시도는 약간 더 큰 토큰 한도로
+      if (attempt === 0) {
+        body.generationConfig.maxOutputTokens = Math.min(32768, body.generationConfig.maxOutputTokens * 2)
+      }
+    }
+  }
+  throw lastErr
+}
+
+// 잘린 JSON 부분 복구 시도 — 마지막 완전한 객체까지만 살림
+// 식단처럼 meals[]가 잘릴 때 효과적: 마지막 닫힌 } 까지만 keep + 배열·객체 닫기
+function tryRepairTruncatedJSON(text) {
+  // 마지막 완전한 객체 끝 (}) 위치 찾기
+  let depth = 0
+  let inString = false
+  let escape = false
+  let lastClean = -1
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (escape) { escape = false; continue }
+    if (c === '\\' && inString) { escape = true; continue }
+    if (c === '"') inString = !inString
+    if (inString) continue
+    if (c === '{' || c === '[') depth++
+    if (c === '}' || c === ']') {
+      depth--
+      if (depth === 1) lastClean = i  // 최상위 객체 내부의 마지막 닫힌 자식
+    }
+  }
+  if (lastClean < 0) return null
+
+  // 후보 = text[0..lastClean] + 필요한 닫기
+  const head = text.slice(0, lastClean + 1)
+  // head 안에서 열린 만큼 닫기
+  let d = 0
+  let s = false
+  let esc = false
+  const stack = []
+  for (let i = 0; i < head.length; i++) {
+    const c = head[i]
+    if (esc) { esc = false; continue }
+    if (c === '\\' && s) { esc = true; continue }
+    if (c === '"') s = !s
+    if (s) continue
+    if (c === '{') { stack.push('}'); d++ }
+    if (c === '[') { stack.push(']'); d++ }
+    if (c === '}' || c === ']') { stack.pop(); d-- }
+  }
+  const closed = head + stack.reverse().join('')
+  try {
+    return JSON.parse(closed)
+  } catch {
+    return null
+  }
+}
+
+// ─── Chat 모드 ─────────────────────────────────────────────
+// 자유 대화 — save_to_memory 단일 도구만 사용 가능
+export async function callGeminiChat({
+  apiKey, model = DEFAULT_MODEL,
+  contents, memory, autoSummary,
+  onModelSwitch,
+}) {
+  const body = {
+    contents,
+    systemInstruction: { parts: [{ text: buildChatSystemInstruction(memory, autoSummary) }] },
+    tools: [{ functionDeclarations: CHAT_TOOLS }],
+    toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+    generationConfig: { temperature: 0.7, topP: 0.95, maxOutputTokens: 4096 },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
+  }
+
+  const response = await callWithRetry({ apiKey, model, body, onModelSwitch })
+  return extractChatResponse(response)
+}
+
+export function extractChatResponse(geminiResponse) {
+  const candidate = geminiResponse?.candidates?.[0]
+  if (!candidate) return { text: '', functionCalls: [], raw: null }
+  const parts = candidate.content?.parts || []
+  const text = parts.filter((p) => p.text).map((p) => p.text).join('')
+  const functionCalls = parts
+    .filter((p) => p.functionCall)
+    .map((p) => ({ name: p.functionCall.name, args: p.functionCall.args || {} }))
+  return { text, functionCalls, raw: candidate.content }
+}

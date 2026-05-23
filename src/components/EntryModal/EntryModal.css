@@ -1,0 +1,102 @@
+.em-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.em-modal {
+  width: 100%;
+  max-width: 380px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-height: 88dvh;
+  overflow-y: auto;
+}
+.em-modal.em-wide {
+  max-width: 460px;
+}
+
+.em-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.em-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* 폼 공통 */
+.em-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.em-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.em-row-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.em-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.em-input,
+.em-select,
+.em-textarea {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  width: 100%;
+}
+.em-input:focus,
+.em-select:focus,
+.em-textarea:focus {
+  border-color: var(--color-primary-mid);
+}
+.em-input[type="date"],
+.em-input[type="time"] {
+  color-scheme: dark;
+}
+.em-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.em-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+.em-actions .btn {
+  flex: 1;
+}

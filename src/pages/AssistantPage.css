@@ -1,0 +1,285 @@
+.assistant-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-bottom: var(--space-xl);
+}
+
+/* ─── 헤더 ─── */
+.assist-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+.assist-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin: 0;
+}
+.assist-header p {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.assist-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+}
+
+.assist-back {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.assist-back:hover {
+  background: var(--color-surface-3);
+  border-color: var(--color-primary-mid);
+}
+
+.assist-section-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: var(--space-sm);
+}
+
+/* ─── 작업 선택 카드들 ─── */
+.task-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+  color: var(--color-text);
+}
+.task-card:hover {
+  border-color: var(--color-primary-mid);
+  background: var(--color-surface-2);
+  transform: translateY(-1px);
+}
+.task-card-primary {
+  background: var(--color-primary-dim);
+  border-color: var(--color-primary);
+}
+
+.task-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.task-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.task-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.task-desc {
+  font-size: 0.75rem;
+  color: var(--color-text-3);
+}
+
+/* ─── 안내 카드 ─── */
+.assist-hint {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--color-text-2);
+}
+.assist-hint p { margin-bottom: 4px; }
+.assist-hint p:last-child { margin-bottom: 0; }
+
+/* ─── 마법사 단계 카드 ─── */
+.assist-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.assist-step-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-weight: 800;
+  font-size: 0.8125rem;
+}
+
+.assist-step-desc {
+  font-size: 0.8125rem;
+  color: var(--color-text-3);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.assist-prompt-box,
+.assist-output-box {
+  width: 100%;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  color: var(--color-text);
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  min-height: 120px;
+}
+.assist-prompt-box:focus,
+.assist-output-box:focus {
+  border-color: var(--color-primary-mid);
+}
+.assist-prompt-box {
+  background: var(--color-surface-3);
+}
+
+.assist-big-btn {
+  font-size: 0.9375rem;
+  padding: 12px;
+  font-weight: 700;
+}
+
+.btn-success-state {
+  background: var(--color-success);
+  color: white;
+  border: none;
+}
+
+/* ─── AI 링크 카드들 ─── */
+.ai-link-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.ai-link-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-md) var(--space-sm);
+  background: var(--color-surface-2);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--color-text);
+  transition: all 0.15s ease;
+  position: relative;
+}
+.ai-link-card:hover {
+  border-color: var(--ai-color, var(--color-primary-mid));
+  background: var(--color-surface-3);
+  transform: translateY(-1px);
+}
+
+.ai-link-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.ai-link-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.ai-link-icon {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  opacity: 0.4;
+}
+
+.assist-tip {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  line-height: 1.5;
+  margin: 0;
+  padding: 8px 10px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── 붙여넣기 도우미 ─── */
+.assist-paste-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* ─── 도움말 ─── */
+.assist-help {
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  line-height: 1.5;
+}
+.assist-help summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-text);
+  list-style: none;
+}
+.assist-help summary::before {
+  content: '❓ ';
+}
+.assist-help summary::-webkit-details-marker { display: none; }
+.assist-help[open] summary { color: var(--color-primary); margin-bottom: 8px; }
+.assist-help ul {
+  margin: 0;
+  padding-left: 1.25em;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.assist-help code {
+  background: var(--color-surface-3);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.75rem;
+  color: var(--color-primary);
+}

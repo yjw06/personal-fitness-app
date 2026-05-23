@@ -1,8 +1,15 @@
 {
   "name": "fitness_app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "license": "SEE LICENSE IN LICENSE",
+  "description": "Personal Training & Running PWA with Gemini-powered AI coach",
+  "homepage": "https://yjw06.github.io/personal-fitness-app/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yjw06/personal-fitness-app.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -18,7 +25,9 @@
     "postcss": "^8.5.15",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.15.1",
+    "remark-gfm": "^4.0.1",
     "tailwindcss": "^4.3.0",
     "zustand": "^5.0.13"
   },

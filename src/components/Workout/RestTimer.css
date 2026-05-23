@@ -2,15 +2,21 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
   text-align: center;
   padding-top: var(--space-lg);
+  position: relative;
 }
 
 .rest-title {
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  transition: color 0.3s ease;
+}
+
+.rest-timer.alert-active .rest-title {
+  color: var(--color-primary);
 }
 
 .rest-next {
@@ -26,8 +32,8 @@
 /* 원형 타이머 */
 .timer-ring-wrap {
   position: relative;
-  width: 160px;
-  height: 160px;
+  width: 180px;
+  height: 180px;
 }
 
 .timer-svg {
@@ -47,8 +53,24 @@
   stroke: var(--color-primary);
   stroke-width: 6;
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.9s linear;
+  transition: stroke-dashoffset 0.9s linear, stroke 0.3s ease;
   filter: drop-shadow(0 0 10px rgba(200,255,0,0.5));
+}
+
+.ring-warn {
+  stroke: var(--color-warning);
+  filter: drop-shadow(0 0 14px rgba(250,204,21,0.8));
+}
+
+.ring-done {
+  stroke: var(--color-primary);
+  filter: drop-shadow(0 0 14px rgba(200,255,0,0.55));
+  animation: ring-breath 2.4s ease-in-out infinite;
+}
+
+@keyframes ring-breath {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(200,255,0,0.4)); }
+  50%      { filter: drop-shadow(0 0 18px rgba(200,255,0,0.7)); }
 }
 
 .timer-center {
@@ -67,6 +89,17 @@
   line-height: 1;
   letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.timer-warn {
+  color: var(--color-warning);
+  animation: warn-pop 0.5s ease-out;
+}
+
+@keyframes warn-pop {
+  0%   { transform: scale(1.4); }
+  100% { transform: scale(1); }
 }
 
 .timer-unit {
@@ -78,31 +111,54 @@
   letter-spacing: 0.08em;
 }
 
-/* 운동 선택 */
-.rest-jump { width: 100%; }
-
-.rest-jump-label {
-  font-size: 0.6875rem;
-  color: var(--color-text-3);
-  margin-bottom: var(--space-sm);
-  text-align: left;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.rest-jump-list {
+/* ± 시간 조절 */
+.rest-adjust-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+  width: 100%;
 }
 
-.rest-jump-btn {
-  text-align: left;
+.rest-adjust-btn {
+  flex: 1;
+  padding: 10px 14px;
   font-size: 0.8125rem;
-  padding: 12px 16px;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.rest-adjust-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 음소거 토글 (우상단 플로팅) */
+.rest-mute-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+/* 알림 활성 시 화면 은은한 빛 (자연스럽게) */
+.alert-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  background: radial-gradient(ellipse at center, rgba(200,255,0,0.08), rgba(200,255,0,0) 70%);
+  animation: flash-breath 2.8s ease-in-out infinite;
+}
+
+@keyframes flash-breath {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.9; }
+}
+
+/* 알림 활성 시 메인 버튼 — 부드러운 호흡 */
+.alert-btn {
+  animation: btn-breath 2.2s ease-in-out infinite !important;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+@keyframes btn-breath {
+  0%, 100% { box-shadow: 0 0 18px rgba(200,255,0,0.35); }
+  50%      { box-shadow: 0 0 32px rgba(200,255,0,0.55); }
 }

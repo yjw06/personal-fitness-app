@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  getFirestore,
+} from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,6 +17,20 @@ const firebaseConfig = {
 }
 
 const app = initializeApp(firebaseConfig)
+
+// 오프라인 persistence + 멀티 탭 지원
+let db
+try {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+    }),
+  })
+} catch (err) {
+  console.warn('[firebase] persistence 초기화 실패, 메모리 캐시로 폴백:', err)
+  db = getFirestore(app)
+}
+
+export { db }
 export const auth           = getAuth(app)
-export const db             = getFirestore(app)
 export const googleProvider = new GoogleAuthProvider()

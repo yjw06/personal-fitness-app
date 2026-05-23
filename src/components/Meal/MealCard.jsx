@@ -4,6 +4,7 @@ const MEAL_META = {
   breakfast: { label: '아침',  emoji: '☀️', colorVar: '--color-breakfast' },
   lunch:     { label: '점심',  emoji: '⚡', colorVar: '--color-lunch'     },
   dinner:    { label: '저녁',  emoji: '🌙', colorVar: '--color-dinner'    },
+  snack:     { label: '간식',  emoji: '🍎', colorVar: '--color-warning'   },
   supplement:{ label: '보충제', emoji: '💊', colorVar: '--color-info'      },
 }
 

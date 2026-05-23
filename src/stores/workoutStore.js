@@ -1,35 +1,53 @@
 import { create } from 'zustand'
 import { saveWorkoutProgress } from '../services/csvService'
 
+// localStorage에서 선택 날짜 복원 (탭 이동 후에도 유지)
+const STORAGE_KEY = 'selectedDate_v1'
+const todayYMD = () => new Date().toISOString().slice(0, 10).replace(/-/g, '')
+
+const initialDate = (() => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored && /^\d{8}$/.test(stored)) return stored
+  } catch {}
+  return todayYMD()
+})()
+
 export const useWorkoutStore = create((set, get) => ({
-  // ─── 현재 날짜 ────────────────────────────────
-  selectedDate: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+  // ─── 현재 선택 날짜 (모든 페이지가 공유) ───────
+  selectedDate: initialDate,
 
   // ─── 데이터 ───────────────────────────────────
   workoutData: null,
   mealData:    null,
   loading:     false,
   error:       null,
-  uid:         null,  // 현재 사용자 UID (Firebase 저장용)
+  uid:         null,
 
   // ─── 운동 진행 상태 ───────────────────────────
-  // phase: 'overview' | 'active' | 'rest' | 'pick_next'
   phase:           'overview',
   currentIndex:    0,
   currentSet:      1,
-  completedSets:   {},   // { exerciseIndex: completedSetCount }
+  completedSets:   {},
   restSecondsLeft: 0,
   restEndTime:     null,
 
   // ─── Actions ──────────────────────────────────
-  setSelectedDate: (date) => set({ selectedDate: date }),
+  setSelectedDate: (date) => {
+    try { localStorage.setItem(STORAGE_KEY, date) } catch {}
+    set({ selectedDate: date })
+  },
+  resetSelectedDateToToday: () => {
+    const today = todayYMD()
+    try { localStorage.setItem(STORAGE_KEY, today) } catch {}
+    set({ selectedDate: today })
+  },
   setWorkoutData:  (data) => set({ workoutData: data }),
   setMealData:     (data) => set({ mealData: data }),
   setLoading:      (v)    => set({ loading: v }),
   setError:        (e)    => set({ error: e }),
   setUid:          (uid)  => set({ uid }),
 
-  // completedSets를 Firebase에 저장하는 헬퍼
   _persistProgress: (newCompleted) => {
     const { uid, selectedDate } = get()
     if (uid && selectedDate) {
@@ -37,12 +55,9 @@ export const useWorkoutStore = create((set, get) => ({
     }
   },
 
-  // 운동 시작 (첫 번째 미완료 운동부터)
   startWorkout: () => {
     const { workoutData, completedSets } = get()
     if (!workoutData?.length) return
-
-    // 아직 완료하지 않은 첫 번째 운동 찾기
     let startIdx = 0
     for (let i = 0; i < workoutData.length; i++) {
       const totalSets = parseInt(workoutData[i]?.sets) || 3
@@ -51,10 +66,9 @@ export const useWorkoutStore = create((set, get) => ({
         break
       }
     }
-    set({ phase: 'active', currentIndex: startIdx, currentSet: 1 })
+    set({ phase: 'active', currentIndex: startIdx, currentSet: (completedSets[startIdx] || 0) + 1 })
   },
 
-  // 세트 완료
   completeSet: () => {
     const { currentIndex, currentSet, workoutData, completedSets } = get()
     const exercise = workoutData?.[currentIndex]
@@ -67,7 +81,6 @@ export const useWorkoutStore = create((set, get) => ({
     }
 
     if (currentSet >= totalSets) {
-      // ★ 마지막 세트 완료 → 휴식 없이 바로 다음 운동 선택!
       const hasRemaining = workoutData.some((ex, i) => {
         if (i === currentIndex) return false
         const ts = parseInt(ex?.sets) || 3
@@ -79,7 +92,6 @@ export const useWorkoutStore = create((set, get) => ({
         phase:         hasRemaining ? 'pick_next' : 'overview',
       })
     } else {
-      // 아직 세트 남음 → 휴식 후 다음 세트
       set({
         completedSets:   newCompleted,
         currentSet:      currentSet + 1,
@@ -89,35 +101,33 @@ export const useWorkoutStore = create((set, get) => ({
       })
     }
 
-    // ★ Firebase에 진행 상태 저장
     get()._persistProgress(newCompleted)
   },
 
-  // 휴식 종료 → 같은 운동 다음 세트로
-  afterRest: () => {
-    set({ phase: 'active', restEndTime: null })
+  afterRest: () => set({ phase: 'active', restEndTime: null }),
+
+  tickRest: (remaining) => set({ restSecondsLeft: remaining }),
+
+  // 휴식 시간 ± 조절
+  extendRest: (deltaSec) => {
+    const { restEndTime } = get()
+    if (!restEndTime) return
+    const newEnd = Math.max(Date.now() + 1000, restEndTime + deltaSec * 1000)
+    set({ restEndTime: newEnd })
   },
 
-  // 타이머 틱 (절대시간 기반 — remaining을 직접 받음)
-  tickRest: (remaining) =>
-    set({ restSecondsLeft: remaining }),
+  pickExercise: (index) => {
+    const { completedSets } = get()
+    set({ phase: 'active', currentIndex: index, currentSet: (completedSets[index] || 0) + 1 })
+  },
 
-  // 다음 운동 선택 (pick_next에서)
-  pickExercise: (index) =>
-    set({ phase: 'active', currentIndex: index, currentSet: 1 }),
+  resetWorkout: () => set({ phase: 'overview', currentIndex: 0, currentSet: 1 }),
 
-  // 운동 종료 → overview로 돌아가되 completedSets는 유지!
-  resetWorkout: () =>
-    set({ phase: 'overview', currentIndex: 0, currentSet: 1 }),
-
-  // 오늘 운동 기록 완전 초기화 (새로운 날)
   clearAll: () => {
     set({ phase: 'overview', currentIndex: 0, currentSet: 1, completedSets: {} })
-    // Firebase에서도 초기화
     get()._persistProgress({})
   },
 
-  // 특정 운동이 완전히 끝났는지 확인
   isExerciseDone: (index) => {
     const { workoutData, completedSets } = get()
     const exercise = workoutData?.[index]
