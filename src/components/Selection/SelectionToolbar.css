@@ -1,6 +1,11 @@
 .sel-enter-btn {
   font-size: 0.75rem;
-  padding: 6px 12px;
+  padding: 6px 10px;
+  margin-left: auto;       /* 줄 안에 남으면 우측 정렬, 줄바꿈되어도 우측에 자연스럽게 */
+  flex-shrink: 0;
+}
+.sel-enter-btn svg {
+  flex-shrink: 0;
 }
 
 .selection-toolbar {
