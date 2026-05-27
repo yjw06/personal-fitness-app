@@ -102,14 +102,16 @@ time,activity,detail,completed
 
 // ─── 프롬프트 생성 ─────────────────────────────────────────
 // kind: 'workout' | 'meal' | 'schedule' | 'all'
-export function buildPrompt(kind, memory = {}) {
+// extraNotes: 사용자가 직접 입력한 오늘만의 특이사항 (선택)
+export function buildPrompt(kind, memory = {}, extraNotes = '') {
   const { ymd, dayKo, dateStr } = todayInfo()
   const context = buildContextBlock(memory)
+  const userNotes = (extraNotes || '').trim()
 
   const head = `오늘은 **${dateStr} (${dayKo}요일)** 입니다.
 저는 오늘의 ${kindLabel(kind)}을 만들어달라고 부탁드립니다.
 
-${context ? context + '\n\n' : ''}---
+${context ? context + '\n\n' : ''}${userNotes ? `## ⭐ 오늘 특이사항 (반드시 반영해 주세요)\n${userNotes}\n\n` : ''}---
 
 # 작업 지시
 

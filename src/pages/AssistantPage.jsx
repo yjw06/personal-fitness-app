@@ -42,18 +42,19 @@ export default function AssistantPage() {
   const memory = useMemoryStore()
   const { load: loadMemory, isLoaded } = memory
 
-  const [task, setTask]       = useState(null)       // 'workout' | 'meal' | 'schedule' | 'all'
-  const [prompt, setPrompt]   = useState('')
-  const [copied, setCopied]   = useState(false)
+  const [task, setTask]         = useState(null)       // 'workout' | 'meal' | 'schedule' | 'all'
+  const [prompt, setPrompt]     = useState('')
+  const [extraNotes, setExtraNotes] = useState('')     // 사용자가 직접 적는 오늘 특이사항
+  const [copied, setCopied]     = useState(false)
   const [aiOutput, setAiOutput] = useState('')
-  const [saving, setSaving]   = useState(false)
+  const [saving, setSaving]     = useState(false)
 
   // 사용자 메모리 로드
   useEffect(() => {
     if (user && !isLoaded) loadMemory(user.uid)
   }, [user, isLoaded, loadMemory])
 
-  // 작업 선택 시 프롬프트 생성
+  // 작업 선택 또는 특이사항 변경 시 프롬프트 다시 생성
   useEffect(() => {
     if (!task) { setPrompt(''); return }
     const memData = {
@@ -63,10 +64,16 @@ export default function AssistantPage() {
       coachPersona: memory.coachPersona,
       aiNotes: memory.aiNotes,
     }
-    setPrompt(buildPrompt(task, memData))
+    setPrompt(buildPrompt(task, memData, extraNotes))
     setCopied(false)
+  }, [task, extraNotes,
+      memory.profile, memory.workoutPlan, memory.mealPlan, memory.coachPersona, memory.aiNotes])
+
+  // 작업 바뀔 때 입력 필드 리셋
+  useEffect(() => {
+    setExtraNotes('')
     setAiOutput('')
-  }, [task, memory.profile, memory.workoutPlan, memory.mealPlan, memory.coachPersona, memory.aiNotes])
+  }, [task])
 
   const handleCopy = useCallback(async () => {
     try {
@@ -216,6 +223,24 @@ export default function AssistantPage() {
         <p className="assist-step-desc">
           아래 텍스트를 통째로 복사한 다음, AI(ChatGPT/Claude/Gemini)에 붙여넣으세요.
         </p>
+
+        {/* 사용자 직접 입력 — 오늘 특이사항 (선택) */}
+        <div className="assist-extra-notes">
+          <label className="assist-extra-label" htmlFor="assist-extra-input">
+            <span>⭐ 오늘만의 특이사항 (선택)</span>
+            <span className="assist-extra-hint">아래 프롬프트에 자동 반영돼요</span>
+          </label>
+          <textarea
+            id="assist-extra-input"
+            className="assist-extra-input"
+            value={extraNotes}
+            onChange={(e) => setExtraNotes(e.target.value)}
+            placeholder={'예: "오늘 컨디션 안 좋아 강도 낮춰줘"\n예: "어제 점심에 라면 먹어서 오늘 단백질 더"\n예: "왼쪽 어깨 시큰 — 프레스 종목 빼고"'}
+            rows={3}
+            spellCheck="false"
+          />
+        </div>
+
         <textarea
           className="assist-prompt-box"
           value={prompt}

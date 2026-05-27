@@ -145,8 +145,8 @@ export const SCHEMAS = {
   schedule: SCHEDULE_SCHEMA,
 }
 
-// ─── 공통 컨텍스트 블록 (오늘 날짜 + 마스터플랜 + 어제 분석) ───
-function buildContextBlock(memory, autoSummary = {}) {
+// ─── 공통 컨텍스트 블록 (오늘 날짜 + 마스터플랜 + 어제 분석 + 오늘 특이사항) ───
+function buildContextBlock(memory, autoSummary = {}, extraNotes = '') {
   const { dateStr, ymd, dayKo, dayEn } = todayMeta()
 
   let ctx = `# Today
@@ -195,14 +195,21 @@ YYYYMMDD: ${ymd} — Weekday: ${dayKo}요일 (${dayEn})
     })
   }
 
+  // 오늘 특이사항 — 사용자가 직접 입력 (가장 우선순위 높게 반영)
+  const notes = (extraNotes || '').trim()
+  if (notes) {
+    ctx += `\n# ⭐ Today's Special Notes (MUST REFLECT in the plan)\n${notes}\n`
+    ctx += `→ The above notes are user-provided special conditions for TODAY only. They override the master plan when they conflict. Always reflect them in your output.\n`
+  }
+
   return ctx
 }
 
 // ─── 작업별 시스템 프롬프트 빌더 ───────────────────────────
 // 한 작업당 짧고 집중된 프롬프트 — 토큰 절감 + 모델 집중
 
-export function buildWorkoutPrompt(memory = {}, autoSummary = {}) {
-  const ctx = buildContextBlock(memory, autoSummary)
+export function buildWorkoutPrompt(memory = {}, autoSummary = {}, extraNotes = '') {
+  const ctx = buildContextBlock(memory, autoSummary, extraNotes)
   const plan = memory.workoutPlan ? `\n# Workout Master Plan\n${memory.workoutPlan}\n` : ''
 
   return `You are this user's personal fitness coach. Generate today's workout routine and return it as JSON matching the provided schema.
@@ -221,8 +228,8 @@ All string values (exercise_name etc.) MUST be in Korean.
 Return JSON only — no extra text.`
 }
 
-export function buildMealPrompt(memory = {}, autoSummary = {}) {
-  const ctx = buildContextBlock(memory, autoSummary)
+export function buildMealPrompt(memory = {}, autoSummary = {}, extraNotes = '') {
+  const ctx = buildContextBlock(memory, autoSummary, extraNotes)
   const plan = memory.mealPlan ? `\n# Meal Master Plan\n${memory.mealPlan}\n` : ''
 
   return `You are this user's personal fitness coach. Generate today's meal plan and return it as JSON matching the provided schema.
@@ -261,8 +268,8 @@ All string values (food_name etc.) MUST be in Korean.
 Return JSON only — no extra text.`
 }
 
-export function buildSchedulePrompt(memory = {}, autoSummary = {}) {
-  const ctx = buildContextBlock(memory, autoSummary)
+export function buildSchedulePrompt(memory = {}, autoSummary = {}, extraNotes = '') {
+  const ctx = buildContextBlock(memory, autoSummary, extraNotes)
   const plan = memory.workoutPlan || memory.mealPlan
     ? `\n# Reference Plans\n${memory.workoutPlan ? `## Workout\n${memory.workoutPlan}\n` : ''}${memory.mealPlan ? `## Meal\n${memory.mealPlan}\n` : ''}`
     : ''

@@ -40,6 +40,7 @@ export default function CoachPage() {
   } = memory
 
   const [input, setInput] = useState('')
+  const [extraNotes, setExtraNotes] = useState('')   // 오늘만의 특이사항 (빈 채팅 화면 textarea)
   const [cmdMenuOpen, setCmdMenuOpen] = useState(false)
   const [cmdMenuIdx, setCmdMenuIdx]   = useState(0)
   const scrollRef = useRef(null)
@@ -92,10 +93,10 @@ export default function CoachPage() {
 
   // ─── JSON 모드: 단일 작업 호출 ────────────────────────────
   // 사용자 메시지에 운동/식단/스케줄 칩 1개 추가 + 호출 + 저장
-  const runJsonJob = useCallback(async (kind, assistantMsgIdx) => {
+  const runJsonJob = useCallback(async (kind, notes = '') => {
     const date = todayYmd()
     const { schema, buildPrompt } = getJobConfig(kind)
-    const system = buildPrompt(getMemSnapshot(), getSummarySnapshot())
+    const system = buildPrompt(getMemSnapshot(), getSummarySnapshot(), notes)
 
     // 진행 칩 "running"
     updateLastMessage(user.uid, {
@@ -130,7 +131,7 @@ export default function CoachPage() {
   }, [apiKey, aiModel, user, updateLastMessage])
 
   // ─── JSON-multi 모드: 여러 작업 순차 호출 ─────────────────
-  const runJsonMulti = useCallback(async (kinds) => {
+  const runJsonMulti = useCallback(async (kinds, notes = '') => {
     const date = todayYmd()
     const results = []
 
@@ -141,7 +142,7 @@ export default function CoachPage() {
     for (let i = 0; i < kinds.length; i++) {
       const kind = kinds[i]
       const { schema, buildPrompt } = getJobConfig(kind)
-      const system = buildPrompt(getMemSnapshot(), getSummarySnapshot())
+      const system = buildPrompt(getMemSnapshot(), getSummarySnapshot(), notes)
 
       // 현재 작업 running으로 갱신
       const chipsRunning = kinds.map((k, idx) => ({
@@ -192,8 +193,12 @@ export default function CoachPage() {
   }, [apiKey, aiModel, user, updateLastMessage])
 
   // ─── Chat 모드: 자유 대화 (save_to_memory 도구만) ─────────
-  const runChat = useCallback(async (userText, aiPromptOverride) => {
-    const aiText = aiPromptOverride ?? userText
+  const runChat = useCallback(async (userText, aiPromptOverride, notes = '') => {
+    let aiText = aiPromptOverride ?? userText
+    if (notes && notes.trim()) {
+      // 자유 대화는 시스템 프롬프트 분리되어 있어 user 메시지 앞에 prepend
+      aiText = `[오늘 특이사항: ${notes.trim()}]\n${aiText}`
+    }
     let contents = [...rawContents, { role: 'user', parts: [{ text: aiText }] }]
 
     try {
@@ -271,12 +276,16 @@ export default function CoachPage() {
   }, [apiKey, aiModel, user, rawContents, addMessage, updateLastMessage, setRawContents, setError])
 
   // ─── 메인 핸들러 ──────────────────────────────────────────
-  const handleSend = useCallback(async (userText) => {
+  // presetExtras: 빈 채팅 화면의 textarea에서 카드 클릭 시 전달
+  const handleSend = useCallback(async (userText, presetExtras = '') => {
     const text = (userText ?? input).trim()
     if (!text || isLoading || !user) return
 
     // 슬래시 명령어 매칭
-    const { isCommand, command } = parseCommand(text)
+    const { isCommand, command, extras } = parseCommand(text)
+    // CLI extras 우선, 없으면 textarea 값
+    const notes = (extras && extras.trim()) || (presetExtras && presetExtras.trim()) || ''
+
     if (isCommand) {
       if (!command) {
         toast.warning('알 수 없는 명령어. /도움 으로 목록 확인.')
@@ -297,20 +306,25 @@ export default function CoachPage() {
         return
       }
 
-      // 사용자 메시지 + 빈 assistant 메시지
-      addMessage(user.uid, { role: 'user', text })
+      // 사용자 메시지에 특이사항도 같이 노출 (가독성)
+      const displayText = notes
+        ? `${text}${text.includes(notes) ? '' : `\n📝 ${notes}`}`
+        : text
+      addMessage(user.uid, { role: 'user', text: displayText })
       addMessage(user.uid, { role: 'assistant', text: '', pending: true })
       setLoading(true)
       setError(null)
 
       try {
         if (command.mode === 'json') {
-          await runJsonJob(command.kind)
+          await runJsonJob(command.kind, notes)
         } else if (command.mode === 'json-multi') {
-          await runJsonMulti(command.kinds)
+          await runJsonMulti(command.kinds, notes)
         } else if (command.mode === 'chat') {
-          await runChat(text, command.prompt)
+          await runChat(text, command.prompt, notes)
         }
+        // 한 번 사용한 textarea 값은 비움
+        if (presetExtras) setExtraNotes('')
       } finally {
         setLoading(false)
       }
@@ -329,7 +343,9 @@ export default function CoachPage() {
     addMessage(user.uid, { role: 'assistant', text: '', pending: true })
     setLoading(true)
     try {
-      await runChat(text)
+      // 자유 대화는 textarea 값도 함께 전달 (자연어로 prepend)
+      await runChat(text, undefined, notes)
+      if (presetExtras) setExtraNotes('')
     } finally {
       setLoading(false)
     }
@@ -478,13 +494,31 @@ export default function CoachPage() {
       <div className="coach-messages" ref={scrollRef}>
         {messages.length === 0 && (
           <div className="coach-suggestions">
+            {/* 오늘 특이사항 — 카드 클릭 시 자동 첨부 */}
+            <div className="coach-extra-notes">
+              <label className="coach-extra-label" htmlFor="coach-extra-input">
+                <span>⭐ 오늘만의 특이사항 (선택)</span>
+                <span className="coach-extra-hint">아래 명령어 누르면 자동 반영</span>
+              </label>
+              <textarea
+                id="coach-extra-input"
+                className="coach-extra-input"
+                value={extraNotes}
+                onChange={(e) => setExtraNotes(e.target.value)}
+                placeholder={'예: "오늘 컨디션 안 좋아 강도 낮춰줘"\n예: "어제 점심에 라면 먹어서 단백질 더"\n예: "왼쪽 어깨 시큰 — 프레스 종목 빼고"'}
+                rows={3}
+                spellCheck="false"
+                disabled={isLoading || !apiKey}
+              />
+            </div>
+
             <p className="coach-suggest-label">⚡ 빠른 명령어 (입력창에 / 입력해도 사용 가능)</p>
             <div className="coach-cmd-grid">
               {COMMANDS.filter((c) => c.mode !== 'client').map((c) => (
                 <button
                   key={c.id}
                   className="coach-cmd-card"
-                  onClick={() => handleSend(`/${c.id}`)}
+                  onClick={() => handleSend(`/${c.id}`, extraNotes)}
                   disabled={isLoading || !apiKey}
                 >
                   <span className="cmd-card-icon">{c.icon}</span>
@@ -500,7 +534,7 @@ export default function CoachPage() {
             </p>
             <button
               className="coach-suggestion-btn"
-              onClick={() => handleSend('오늘 컨디션 어때? 짧게 물어봐')}
+              onClick={() => handleSend('오늘 컨디션 어때? 짧게 물어봐', extraNotes)}
               disabled={isLoading || !apiKey}
             >
               오늘 컨디션 어때?

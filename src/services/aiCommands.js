@@ -82,18 +82,25 @@ export const COMMANDS = [
 
 /**
  * 입력 텍스트가 명령어인지 매칭
+ * "/오늘 무릎 시큰" → 첫 단어 "오늘" = 명령어, 나머지 "무릎 시큰" = extras
  */
 export function parseCommand(text) {
   if (!text.startsWith('/')) {
-    return { isCommand: false, command: null, query: '' }
+    return { isCommand: false, command: null, query: '', extras: '' }
   }
-  const query = text.slice(1).trim().toLowerCase()
-  if (!query) return { isCommand: true, command: null, query: '' }
+  const rest = text.slice(1).trim()
+  if (!rest) return { isCommand: true, command: null, query: '', extras: '' }
+
+  // 첫 공백 기준 분리
+  const spaceIdx = rest.search(/\s/)
+  const firstWord = spaceIdx === -1 ? rest : rest.slice(0, spaceIdx)
+  const extras    = spaceIdx === -1 ? ''   : rest.slice(spaceIdx + 1).trim()
+  const query     = firstWord.toLowerCase()
 
   const exact = COMMANDS.find(
     (c) => c.id.toLowerCase() === query || c.aliases?.some((a) => a.toLowerCase() === query)
   )
-  return { isCommand: true, command: exact ?? null, query }
+  return { isCommand: true, command: exact ?? null, query, extras }
 }
 
 /**
