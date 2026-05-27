@@ -41,13 +41,17 @@ export function timeToMinutes(t) {
   return h * 60 + m
 }
 
-// 두 시간 사이 간격을 "1시간 30분" 형태로
-export function formatGap(fromMin, toMin) {
-  const diff = toMin - fromMin
-  if (diff <= 0) return null
-  const h = Math.floor(diff / 60)
-  const m = diff % 60
-  if (h && m) return `${h}시간 ${m}분 후`
-  if (h)      return `${h}시간 후`
-  return `${m}분 후`
+// 현재 시각 기준 상대 시간 표시 ("30분 후" / "2시간 전" / "지금")
+export function formatRelativeToNow(timeStr) {
+  const itemMin = timeToMinutes(timeStr)
+  if (itemMin === null) return null
+  const now = new Date()
+  const nowMin = now.getHours() * 60 + now.getMinutes()
+  const diff = itemMin - nowMin
+  if (Math.abs(diff) < 1) return '지금'
+  const abs = Math.abs(diff)
+  const h = Math.floor(abs / 60)
+  const m = abs % 60
+  const str = h && m ? `${h}시간 ${m}분` : h ? `${h}시간` : `${m}분`
+  return diff > 0 ? `${str} 후` : `${str} 전`
 }

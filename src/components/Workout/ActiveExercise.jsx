@@ -1,4 +1,5 @@
 import { useWorkoutStore } from '../../stores/workoutStore'
+import { unlockAudio } from '../../services/restAlert'
 import './ActiveExercise.css'
 
 const PART_COLORS = {
@@ -65,7 +66,7 @@ export default function ActiveExercise() {
       <button
         id="btn-complete-set"
         className="btn btn-primary btn-full ae-complete-btn"
-        onClick={completeSet}
+        onClick={() => { unlockAudio(); completeSet() }}
       >
         ✓ 세트 완료
       </button>

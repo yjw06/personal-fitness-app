@@ -8,6 +8,13 @@
   position: relative;
 }
 
+.rest-ios-note {
+  font-size: 0.625rem;
+  color: var(--color-text-3);
+  text-align: center;
+  margin-top: calc(var(--space-xs) * -1);
+}
+
 .rest-title {
   font-size: 1.25rem;
   font-weight: 700;

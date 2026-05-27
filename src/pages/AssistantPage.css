@@ -244,6 +244,47 @@
   border-radius: var(--radius-sm);
 }
 
+/* ─── 오늘 특이사항 입력 ─── */
+.assist-extra-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.assist-extra-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.assist-extra-hint {
+  font-size: 0.6875rem;
+  color: var(--color-text-3);
+  font-weight: 500;
+}
+.assist-extra-input {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  min-height: 60px;
+}
+.assist-extra-input:focus {
+  border-color: var(--color-primary-mid);
+}
+
 /* ─── 붙여넣기 도우미 ─── */
 .assist-paste-actions {
   display: flex;

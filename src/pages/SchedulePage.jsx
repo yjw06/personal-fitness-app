@@ -8,7 +8,7 @@ import { useSelection } from '../hooks/useSelection'
 import SelectionToolbar from '../components/Selection/SelectionToolbar'
 import EntryModal from '../components/EntryModal/EntryModal'
 import ScheduleForm from '../components/EntryModal/ScheduleForm'
-import { categorizeActivity, formatGap, timeToMinutes } from '../utils/scheduleCategory'
+import { categorizeActivity, formatRelativeToNow } from '../utils/scheduleCategory'
 import { format, startOfWeek, addDays, isToday } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { Upload, RefreshCw, Check, Plus, Pencil } from 'lucide-react'
@@ -288,13 +288,7 @@ export default function SchedulePage() {
               const checked = selection.isSelected(index)
               const cat = categorizeActivity(item.activity, item.detail)
 
-              // 다음 일정까지 간격
-              const nextItem = schedules[index + 1]
-              const myMin   = timeToMinutes(item.time)
-              const nextMin = nextItem ? timeToMinutes(nextItem.time) : null
-              const gapLabel = (myMin != null && nextMin != null)
-                ? formatGap(myMin, nextMin)
-                : null
+              const gapLabel = formatRelativeToNow(item.time)
 
               return (
                 <div

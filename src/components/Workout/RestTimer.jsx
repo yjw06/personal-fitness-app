@@ -190,6 +190,10 @@ export default function RestTimer() {
       >
         {alertActive ? '✓ 다음 세트 시작!' : '다음 세트 바로 시작 →'}
       </button>
+
+      {/iPhone|iPad/i.test(navigator.userAgent) && (
+        <p className="rest-ios-note">iOS는 진동·알림 미지원 — 화면 깜빡임으로 대체됩니다</p>
+      )}
     </div>
   )
 }
