@@ -27,34 +27,34 @@ function todayMeta() {
 
 export const WORKOUT_SCHEMA = {
   type: 'object',
-  description: '오늘의 운동 루틴',
+  description: "Today's workout routine",
   properties: {
     exercises: {
       type: 'array',
-      description: '운동 종목 목록',
+      description: 'List of exercises',
       items: {
         type: 'object',
         properties: {
           exercise_name: {
             type: 'string',
-            description: '운동 이름. 도구·장비·그립까지 명시 (예: "인클라인 덤벨 컬", "케이블 트라이셉스 푸시다운 (V바)"). 러닝은 속도·시간·회복까지 (예: "400m 인터벌 런 (13-14km/h 질주 90초 + 6km/h 90초 회복)")',
+            description: 'Exercise name with equipment/grip (e.g. "인클라인 덤벨 컬"). Running: include pace and recovery (e.g. "400m 인터벌 런 (13-14km/h 질주 90초 + 6km/h 90초 회복)")',
           },
           body_part: {
             type: 'string',
             enum: ['가슴', '등', '하체', '어깨', '팔', '코어', '러닝'],
-            description: '운동 부위',
+            description: 'Muscle group',
           },
           sets: {
             type: 'integer',
-            description: '세트 수. 보통 3, 마무리는 2, 러닝은 인터벌 횟수',
+            description: 'Number of sets. Usually 3, finisher = 2, running = interval count',
           },
           reps_or_duration: {
             type: 'string',
-            description: '반복 수는 범위로 ("10-12", "12-15"). 마무리는 "최대 횟수". 러닝은 총 시간 ("18-24분")',
+            description: 'Rep range ("10-12"). Finisher = "최대 횟수". Running = total duration ("18-24분")',
           },
           rest_seconds: {
             type: 'integer',
-            description: '세트 간 휴식(초). 보통 60, 마무리 75-90, 러닝은 0',
+            description: 'Rest between sets (sec). Usually 60, finisher 75-90, running = 0',
           },
         },
         required: ['exercise_name', 'body_part', 'sets', 'reps_or_duration', 'rest_seconds'],
@@ -66,37 +66,37 @@ export const WORKOUT_SCHEMA = {
 
 export const MEAL_SCHEMA = {
   type: 'object',
-  description: '오늘의 식단. 모든 음식은 한 행씩 분리. 모든 매크로 필수',
+  description: "Today's meal plan. One food per row. All macros required",
   properties: {
     protein_target: {
       type: 'number',
-      description: '하루 단백질 목표(g). 사용자 체중 × 1.6~2.2 범위 — 메모리에 명시되어 있으면 그 값 우선',
+      description: 'Daily protein target (g). Weight × 1.6–2.2. Use memory value if provided',
     },
-    carbs_target: { type: 'number', description: '하루 탄수화물 목표(g). 선택' },
-    fat_target:   { type: 'number', description: '하루 지방 목표(g). 선택' },
+    carbs_target: { type: 'number', description: 'Daily carbs target (g). Optional' },
+    fat_target:   { type: 'number', description: 'Daily fat target (g). Optional' },
     meals: {
       type: 'array',
-      description: '식사 항목들. 한 음식 = 한 항목으로 분리. "오트밀+우유+계란" 같이 합치지 말 것',
+      description: 'Meal items. One food = one item. Never combine multiple foods in one row',
       items: {
         type: 'object',
         properties: {
           meal_type: {
             type: 'string',
             enum: ['breakfast', 'lunch', 'dinner', 'snack', 'supplement'],
-            description: '주요 식사는 breakfast/lunch/dinner. 일반 간식·과일·음료(바나나, 사과, 카페인)는 snack. 운동용 보충제(WPI, 크레아틴)만 supplement',
+            description: 'breakfast/lunch/dinner = main meals. snack = general snacks/fruits/drinks. supplement = workout supps only (WPI, creatine)',
           },
           meal_time: {
             type: 'string',
-            description: 'HH:MM 형식 (예: "08:00"). 같은 끼니의 여러 음식은 동일 시간 공유',
+            description: 'HH:MM format (e.g. "08:00"). Same-meal foods share the same time',
           },
           food_name: {
             type: 'string',
-            description: '음식명 + 분량 필수 (예: "백미밥 200g", "계란 3개 (스크램블)"). 절대 "A + B + C" 형태 X',
+            description: 'Food name + quantity (e.g. "백미밥 200g"). Never "A + B + C" format',
           },
-          protein_g: { type: 'number', description: '단백질 g. 필수, 모르면 추정치라도 채울 것' },
-          carbs_g:   { type: 'number', description: '탄수화물 g. 필수' },
-          fat_g:     { type: 'number', description: '지방 g. 필수' },
-          calories:  { type: 'integer', description: '칼로리 kcal (정수). 필수, 모르면 4·4·9 공식으로 계산' },
+          protein_g: { type: 'number', description: 'Protein g. Required — estimate if unknown' },
+          carbs_g:   { type: 'number', description: 'Carbs g. Required' },
+          fat_g:     { type: 'number', description: 'Fat g. Required' },
+          calories:  { type: 'integer', description: 'kcal (integer). Required — use 4·4·9 formula if unknown' },
         },
         required: ['meal_type', 'meal_time', 'food_name', 'protein_g', 'carbs_g', 'fat_g', 'calories'],
       },
@@ -107,29 +107,29 @@ export const MEAL_SCHEMA = {
 
 export const SCHEDULE_SCHEMA = {
   type: 'object',
-  description: '오늘의 일일 스케줄(타임라인)',
+  description: "Today's daily schedule (timeline)",
   properties: {
     items: {
       type: 'array',
-      description: '시간 순서대로 정렬된 일정 항목',
+      description: 'Schedule items in chronological order',
       items: {
         type: 'object',
         properties: {
           time: {
             type: 'string',
-            description: 'HH:MM (예: "08:00")',
+            description: 'HH:MM format (e.g. "08:00")',
           },
           activity: {
             type: 'string',
-            description: '짧은 활동 라벨 (예: "팔 웨이트 (이두/삼두)", "운동 전 간식")',
+            description: 'Short activity label (e.g. "팔 웨이트 (이두/삼두)")',
           },
           detail: {
             type: 'string',
-            description: '필수. 구체적 행동 가이드 — 메뉴/부위/심박수/세트 등 측정 가능한 정보 (예: "400m 질주 인터벌 6~8세트 (심박수 170+)", "WPI 1스쿱 및 크레아틴 5g 섭취"). 빈 문자열 금지',
+            description: 'Required. Concrete action guide — menu/body part/heart rate/sets. Never empty string',
           },
           completed: {
             type: 'boolean',
-            description: '항상 false (신규 생성)',
+            description: 'Always false (new creation)',
           },
         },
         required: ['time', 'activity', 'detail', 'completed'],
@@ -146,7 +146,8 @@ export const SCHEMAS = {
 }
 
 // ─── 공통 컨텍스트 블록 (오늘 날짜 + 마스터플랜 + 어제 분석 + 오늘 특이사항) ───
-function buildContextBlock(memory, autoSummary = {}, extraNotes = '') {
+function buildContextBlock(memory, autoSummary = {}, extraNotes = '', options = {}) {
+  const { includeWorkoutTrend = true, insightKinds = null } = options
   const { dateStr, ymd, dayKo, dayEn } = todayMeta()
 
   let ctx = `# Today
@@ -169,7 +170,10 @@ YYYYMMDD: ${ymd} — Weekday: ${dayKo}요일 (${dayEn})
   }
 
   // 어제 미완료/이탈 자동 감지 (AI가 오늘 계획에 반영하도록)
-  const insights = autoSummary?.yesterdayInsights || memory?.yesterdayInsights || []
+  const allInsights = autoSummary?.yesterdayInsights || memory?.yesterdayInsights || []
+  const insights = insightKinds
+    ? allInsights.filter((i) => insightKinds.includes(i.kind))
+    : allInsights
   if (insights.length > 0) {
     ctx += `\n# Yesterday's Deviations (use this to adjust today's plan)\n`
     insights.forEach((ins) => {
@@ -186,10 +190,10 @@ YYYYMMDD: ${ymd} — Weekday: ${dayKo}요일 (${dayEn})
     ctx += `→ Consider these when planning today: adjust intensity if rested, add what was missed, etc.\n`
   }
 
-  // 최근 운동 추세 (자동 요약)
-  if (autoSummary?.recentWorkouts?.length) {
-    ctx += `\n# Last 14 Days Workout Trend\n`
-    autoSummary.recentWorkouts.slice(-7).forEach((w) => {
+  // 최근 운동 추세 (자동 요약) — 스케줄 prompt에서는 제외
+  if (includeWorkoutTrend && autoSummary?.recentWorkouts?.length) {
+    ctx += `\n# Recent Workout Trend\n`
+    autoSummary.recentWorkouts.slice(-5).forEach((w) => {
       if (w.setsDone === 0) ctx += `- ${w.date}: rest\n`
       else ctx += `- ${w.date}: ${w.parts} · ${w.setsDone}/${w.setsTotal} sets\n`
     })
@@ -229,8 +233,22 @@ Return JSON only — no extra text.`
 }
 
 export function buildMealPrompt(memory = {}, autoSummary = {}, extraNotes = '') {
-  const ctx = buildContextBlock(memory, autoSummary, extraNotes)
+  const ctx = buildContextBlock(memory, autoSummary, extraNotes, {
+    insightKinds: ['meal_no_record'],
+  })
   const plan = memory.mealPlan ? `\n# Meal Master Plan\n${memory.mealPlan}\n` : ''
+
+  // mealPlan에 이미 영양 수치(g, kcal)가 명시되어 있으면 Macro Reference 생략
+  const hasMacroData = memory.mealPlan && /\d+g|\d+kcal/i.test(memory.mealPlan)
+  const macroRef = hasMacroData ? '' : `
+# Macro Reference (when unknown)
+- 백미밥 100g ≈ 150kcal / P3 / C33 / F0.5
+- 닭가슴살 100g ≈ 110kcal / P23 / C0 / F1.5
+- 계란 1개(55g) ≈ 78kcal / P6.3 / C0.6 / F5.3
+- 우유 200ml ≈ 130kcal / P6.6 / C9.6 / F7.4
+- 바나나 1개(120g) ≈ 105kcal / P1 / C27 / F0
+- WPI 프로틴 1스쿱(30g) ≈ 110kcal / P23 / C2 / F1
+`
 
   return `You are this user's personal fitness coach. Generate today's meal plan and return it as JSON matching the provided schema.
 
@@ -253,15 +271,7 @@ ${ctx}${plan}
 - Supplement: 1-2 items max
 - Skip optional protein_target/carbs_target/fat_target if user weight unknown.
 - Use short food_name (no unnecessary descriptions).
-
-# Macro Reference (when unknown)
-- 백미밥 100g ≈ 150kcal / P3 / C33 / F0.5
-- 닭가슴살 100g ≈ 110kcal / P23 / C0 / F1.5
-- 계란 1개(55g) ≈ 78kcal / P6.3 / C0.6 / F5.3
-- 우유 200ml ≈ 130kcal / P6.6 / C9.6 / F7.4
-- 바나나 1개(120g) ≈ 105kcal / P1 / C27 / F0
-- WPI 프로틴 1스쿱(30g) ≈ 110kcal / P23 / C2 / F1
-
+${macroRef}
 # Output Language
 All string values (food_name etc.) MUST be in Korean.
 
@@ -269,7 +279,10 @@ Return JSON only — no extra text.`
 }
 
 export function buildSchedulePrompt(memory = {}, autoSummary = {}, extraNotes = '') {
-  const ctx = buildContextBlock(memory, autoSummary, extraNotes)
+  const ctx = buildContextBlock(memory, autoSummary, extraNotes, {
+    includeWorkoutTrend: false,
+    insightKinds: ['schedule_skipped', 'workout_skipped', 'workout_partial'],
+  })
   const plan = memory.workoutPlan || memory.mealPlan
     ? `\n# Reference Plans\n${memory.workoutPlan ? `## Workout\n${memory.workoutPlan}\n` : ''}${memory.mealPlan ? `## Meal\n${memory.mealPlan}\n` : ''}`
     : ''

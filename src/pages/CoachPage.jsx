@@ -10,6 +10,7 @@ import { useSettingsStore } from '../stores/settingsStore'
 import { toast } from '../stores/toastStore'
 import {
   callGeminiJSON, callGeminiChat, extractChatResponse, todayYmd,
+  compressConversation, COMPRESS_AT,
 } from '../services/aiCoach'
 import { persistByKind, executeChatTool } from '../services/aiTools'
 import { getJobConfig, kindLabel } from '../services/aiSchemas'
@@ -26,9 +27,9 @@ export default function CoachPage() {
 
   // AI store (채팅 — localStorage)
   const {
-    messages, rawContents, isLoading,
+    messages, rawContents, summaryContext, isLoading,
     loadForUser, addMessage, updateLastMessage,
-    setRawContents, setLoading, setError, clearChat,
+    setRawContents, setSummaryContext, setLoading, setError, clearChat,
   } = useAIStore()
 
   // Memory store (Firestore)
@@ -199,7 +200,28 @@ export default function CoachPage() {
       // 자유 대화는 시스템 프롬프트 분리되어 있어 user 메시지 앞에 prepend
       aiText = `[오늘 특이사항: ${notes.trim()}]\n${aiText}`
     }
-    let contents = [...rawContents, { role: 'user', parts: [{ text: aiText }] }]
+
+    // ─── 슬라이딩 윈도우: 오래된 대화 롤링 요약 압축 ────────
+    let currentRaw = rawContents
+    if (rawContents.length >= COMPRESS_AT) {
+      try {
+        const result = await compressConversation({
+          rawContents,
+          prevSummary: summaryContext,
+          apiKey,
+          model: 'gemini-2.5-flash-lite',
+        })
+        if (result) {
+          currentRaw = result.newContents
+          setRawContents(user.uid, result.newContents)
+          setSummaryContext(user.uid, result.summaryText)
+          toast.info('대화 맥락을 압축했습니다.')
+        }
+      } catch { /* 압축 실패 시 원본 유지 */ }
+    }
+    // ─────────────────────────────────────────────────────────
+
+    let contents = [...currentRaw, { role: 'user', parts: [{ text: aiText }] }]
 
     try {
       const memData = getMemSnapshot()
@@ -273,7 +295,7 @@ export default function CoachPage() {
       setError(msg)
       toast.error(`AI 오류: ${msg}`)
     }
-  }, [apiKey, aiModel, user, rawContents, addMessage, updateLastMessage, setRawContents, setError])
+  }, [apiKey, aiModel, user, rawContents, summaryContext, addMessage, updateLastMessage, setRawContents, setSummaryContext, setError])
 
   // ─── 메인 핸들러 ──────────────────────────────────────────
   // presetExtras: 빈 채팅 화면의 textarea에서 카드 클릭 시 전달

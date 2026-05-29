@@ -21,6 +21,9 @@ export const AVAILABLE_MODELS = [
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504])
 
+export const COMPRESS_AT   = 16  // rawContents 이 길이 이상이면 압축
+const        COMPRESS_KEEP = 8   // 최근 N개 entry는 유지
+
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토']
 
 // 로컬 시간 기준 오늘 YYYYMMDD (UTC 변환 X)
@@ -34,12 +37,12 @@ export function todayYmd() {
 export const CHAT_TOOLS = [
   {
     name: 'save_to_memory',
-    description: '대화 중 알게 된 중요한 정보를 영구 메모리에 저장합니다. 예: 부상, 선호도, 목표 변경, 일정 변경, 컨디션 등. 이후 모든 대화·계획 생성에서 자동 참조됩니다.',
+    description: 'Saves important information from the conversation to permanent memory. Use for: injuries, preferences, goal changes, schedule changes, physical condition. Referenced in all future conversations and plan generation.',
     parameters: {
       type: 'object',
       properties: {
-        key:   { type: 'string', description: '메모 카테고리 (예: injury, preference, goal_change, schedule_change, condition)' },
-        value: { type: 'string', description: '실제 내용 (예: "왼쪽 무릎 통증 시작, 5/23")' },
+        key:   { type: 'string', description: 'Memory category (e.g. injury, preference, goal_change, schedule_change, condition)' },
+        value: { type: 'string', description: 'Content to remember (e.g. "left knee pain started 5/23")' },
       },
       required: ['key', 'value'],
     },
@@ -306,4 +309,60 @@ export function extractChatResponse(geminiResponse) {
     .filter((p) => p.functionCall)
     .map((p) => ({ name: p.functionCall.name, args: p.functionCall.args || {} }))
   return { text, functionCalls, raw: candidate.content }
+}
+
+// ─── 슬라이딩 윈도우 압축 ──────────────────────────────────
+// 오래된 rawContents를 요약 교환 쌍 + 최근 N개로 교체
+// 실패 시 null 반환 → 호출측에서 원본 rawContents 유지
+export async function compressConversation({
+  rawContents, prevSummary = '', apiKey, model = 'gemini-2.5-flash-lite',
+}) {
+  if (!apiKey || rawContents.length < COMPRESS_AT) return null
+
+  const toCompress = rawContents.slice(0, rawContents.length - COMPRESS_KEEP)
+  const toKeep     = rawContents.slice(-COMPRESS_KEEP)
+
+  // 텍스트 turn만 직렬화 (function call/response entry는 [tool] 로 표기)
+  const dialogText = toCompress
+    .map((c) => {
+      const role = c.role === 'user' ? 'User' : 'AI'
+      const textPart = c.parts?.find((p) => p.text)
+      if (textPart) return `${role}: ${textPart.text}`
+      const hasFn = c.parts?.some((p) => p.functionCall || p.functionResponse)
+      return hasFn ? `${role}: [tool call]` : null
+    })
+    .filter(Boolean)
+    .join('\n')
+
+  if (!dialogText.trim()) return null
+
+  const prevBlock = prevSummary
+    ? `[Previous summary]\n${prevSummary}\n\n`
+    : ''
+
+  const compressPrompt = `${prevBlock}Summarize the following fitness coach conversation into 3-5 bullet points.
+Focus on: injuries/physical conditions, user preferences, decisions made, important context.
+Omit small talk. Output in Korean.
+
+${dialogText}`
+
+  try {
+    const body = {
+      contents: [{ role: 'user', parts: [{ text: compressPrompt }] }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 512 },
+    }
+    const resp = await callOnce({ apiKey, model, body })
+    const summaryText = resp?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+    if (!summaryText) return null
+
+    // 요약을 fake 교환 쌍으로 주입 (모델이 이전 맥락으로 인식)
+    const summaryPair = [
+      { role: 'user',  parts: [{ text: `[Previous conversation summary]\n${summaryText}` }] },
+      { role: 'model', parts: [{ text: '이전 대화 맥락 파악했습니다.' }] },
+    ]
+
+    return { newContents: [...summaryPair, ...toKeep], summaryText }
+  } catch {
+    return null
+  }
 }
