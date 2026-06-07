@@ -26,6 +26,29 @@ export const useScheduleStore = create((set, get) => ({
       ...row,
       completed: row.completed === true || row.completed === 'true',
     }))
+
+    // 오늘 날짜 스케줄이면 시간이 지난 항목 즉시 완료 처리
+    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    if (date === todayStr && normalized.length > 0) {
+      const now = new Date()
+      const currentMinutes = now.getHours() * 60 + now.getMinutes()
+      let changed = false
+      const checked = normalized.map((item) => {
+        if (item.completed) return item
+        const [h, m] = (item.time || '').split(':').map(Number)
+        if (!isNaN(h) && !isNaN(m) && h * 60 + m <= currentMinutes) {
+          changed = true
+          return { ...item, completed: true }
+        }
+        return item
+      })
+      set({ schedules: checked, isLoading: false })
+      if (changed) {
+        saveScheduleData(uid, date, checked).catch(() => {})
+      }
+      return
+    }
+
     set({ schedules: normalized, isLoading: false })
   },
 

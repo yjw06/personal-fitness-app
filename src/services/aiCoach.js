@@ -302,13 +302,18 @@ export async function callGeminiChat({
 
 export function extractChatResponse(geminiResponse) {
   const candidate = geminiResponse?.candidates?.[0]
-  if (!candidate) return { text: '', functionCalls: [], raw: null }
+  if (!candidate) return { text: '', functionCalls: [], raw: null, finishReason: '' }
   const parts = candidate.content?.parts || []
   const text = parts.filter((p) => p.text).map((p) => p.text).join('')
   const functionCalls = parts
     .filter((p) => p.functionCall)
     .map((p) => ({ name: p.functionCall.name, args: p.functionCall.args || {} }))
-  return { text, functionCalls, raw: candidate.content }
+  return {
+    text,
+    functionCalls,
+    raw: candidate.content,
+    finishReason: candidate.finishReason || '',
+  }
 }
 
 // ─── 슬라이딩 윈도우 압축 ──────────────────────────────────

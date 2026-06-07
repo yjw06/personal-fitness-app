@@ -36,7 +36,7 @@ export default function CoachPage() {
   const memory = useMemoryStore()
   const {
     apiKey, profile, workoutPlan, mealPlan, coachPersona, aiNotes,
-    yesterdayInsights, isLoaded,
+    isLoaded,
     load: loadMemory, loadAutoSummary,
   } = memory
 
@@ -88,7 +88,6 @@ export default function CoachPage() {
     return {
       recentBody: m.recentBody,
       recentWorkouts: m.recentWorkouts,
-      yesterdayInsights: m.yesterdayInsights,
     }
   }
 
@@ -230,7 +229,8 @@ export default function CoachPage() {
       // multi-turn — save_to_memory 호출 시 후속 처리
       for (let turn = 0; turn < 3; turn++) {
         let response, text, functionCalls, raw
-        for (let retry = 0; retry < 2; retry++) {
+        let finishReason = ''
+        for (let retry = 0; retry < 3; retry++) {
           response = await callGeminiChat({
             apiKey, model: aiModel, contents,
             memory: memData, autoSummary: summary,
@@ -242,13 +242,25 @@ export default function CoachPage() {
           text = ext.text
           functionCalls = ext.functionCalls
           raw = ext.raw
+          finishReason = ext.finishReason
           if (text || functionCalls.length) break
+          if (retry < 2) await new Promise((r) => setTimeout(r, 600))
         }
         if (raw) contents = [...contents, raw]
 
         if (!functionCalls.length) {
+          let emptyMsg = ''
+          if (!text) {
+            if (finishReason === 'SAFETY') {
+              emptyMsg = '안전 정책으로 응답이 차단됐어요. 다른 표현으로 다시 시도해 주세요.'
+            } else {
+              emptyMsg = 'API 응답이 비었어요. 잠시 후 다시 시도해 주세요.'
+            }
+          }
           updateLastMessage(user.uid, {
-            text: text || '(응답이 비었어요)', pending: false,
+            text: text || '',
+            error: emptyMsg || undefined,
+            pending: false,
           })
           setRawContents(user.uid, contents)
           return
@@ -296,6 +308,20 @@ export default function CoachPage() {
       toast.error(`AI 오류: ${msg}`)
     }
   }, [apiKey, aiModel, user, rawContents, summaryContext, addMessage, updateLastMessage, setRawContents, setSummaryContext, setError])
+
+  // ─── 재시도 핸들러: 오류 버블을 in-place로 리셋 ───────────
+  const handleRetry = useCallback(async (userText) => {
+    if (!userText || isLoading || !user || !apiKey) return
+    // Reset the error bubble to pending instead of adding new messages
+    updateLastMessage(user.uid, { text: '', pending: true, error: undefined, toolCalls: undefined })
+    setLoading(true)
+    setError(null)
+    try {
+      await runChat(userText)
+    } finally {
+      setLoading(false)
+    }
+  }, [isLoading, user, apiKey, updateLastMessage, setLoading, setError, runChat])
 
   // ─── 메인 핸들러 ──────────────────────────────────────────
   // presetExtras: 빈 채팅 화면의 textarea에서 카드 클릭 시 전달
@@ -469,22 +495,6 @@ export default function CoachPage() {
         </div>
       )}
 
-      {/* 어제 미완료 자동 감지 알림 */}
-      {yesterdayInsights?.length > 0 && (
-        <div className="coach-insight-bar">
-          <span className="insight-emoji">📌</span>
-          <span className="insight-text">
-            어제 자동 감지: {yesterdayInsights.map((i) => (
-              i.kind === 'schedule_skipped' ? `스케줄 ${i.count}건 미완료` :
-              i.kind === 'workout_skipped'  ? '운동 전체 스킵' :
-              i.kind === 'workout_partial'  ? '운동 일부 완수' :
-              i.kind === 'meal_no_record'   ? '식단 기록 없음' : ''
-            )).filter(Boolean).join(' · ')}
-            <span className="insight-hint"> → AI가 오늘 계획에 반영합니다</span>
-          </span>
-        </div>
-      )}
-
       {/* 외부 AI 백업 링크 */}
       <Link to="/assistant" className="coach-backup-link" title="외부 AI(ChatGPT/Claude/Gemini)에 직접 시키기">
         <ExternalLink size={12} />
@@ -564,9 +574,19 @@ export default function CoachPage() {
           </div>
         )}
 
-        {messages.map((msg, i) => (
-          <MessageBubble key={i} msg={msg} />
-        ))}
+        {messages.map((msg, i) => {
+          const isErrorAssistant = msg.role === 'assistant' && msg.error
+          const prevUserText = isErrorAssistant
+            ? [...messages.slice(0, i)].reverse().find((m) => m.role === 'user')?.text
+            : null
+          return (
+            <MessageBubble
+              key={i}
+              msg={msg}
+              onRetry={prevUserText ? () => handleRetry(prevUserText) : undefined}
+            />
+          )
+        })}
       </div>
 
       {/* 입력 */}
@@ -620,7 +640,7 @@ export default function CoachPage() {
 }
 
 // ─── MessageBubble ─────────────────────────────────────────
-function MessageBubble({ msg }) {
+function MessageBubble({ msg, onRetry }) {
   const isUser = msg.role === 'user'
 
   if (isUser) {
@@ -670,7 +690,12 @@ function MessageBubble({ msg }) {
           </div>
         )}
         {msg.error && (
-          <div className="msg-bubble error-bubble">⚠️ {msg.error}</div>
+          <div className="msg-bubble error-bubble">
+            ⚠️ {msg.error}
+            {onRetry && (
+              <button className="retry-btn" onClick={onRetry}>재시도</button>
+            )}
+          </div>
         )}
       </div>
     </div>

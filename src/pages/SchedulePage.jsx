@@ -50,11 +50,9 @@ export default function SchedulePage() {
     }
   }, [user, selectedDate, loadData])
 
-  // 자동 체크 — 오늘 날짜 보고 있을 때만 동작
+  // interval + visibilitychange 자동 체크 (오늘 탭 한정)
   useEffect(() => {
-    if (!user || !schedules.length || !isViewingToday) return
-
-    autoCheckPastItems(user.uid)
+    if (!user || !isViewingToday) return
 
     const interval = setInterval(() => {
       autoCheckPastItems(user.uid)
@@ -69,7 +67,7 @@ export default function SchedulePage() {
       clearInterval(interval)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [user, schedules.length, autoCheckPastItems, isViewingToday])
+  }, [user, isViewingToday, autoCheckPastItems])
 
   const handleUpload = async (e) => {
     const file = e.target.files?.[0]

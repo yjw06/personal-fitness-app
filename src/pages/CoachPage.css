@@ -84,30 +84,6 @@
   opacity: 1;
 }
 
-/* ─── 어제 미완료 자동 감지 ─── */
-.coach-insight-bar {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(250, 204, 21, 0.08);
-  border: 1px solid rgba(250, 204, 21, 0.25);
-  border-radius: var(--radius-md);
-  font-size: 0.75rem;
-  line-height: 1.5;
-}
-.insight-emoji { flex-shrink: 0; }
-.insight-text {
-  color: var(--color-warning);
-  font-weight: 600;
-}
-.insight-hint {
-  color: var(--color-text-3);
-  font-weight: 400;
-  font-size: 0.6875rem;
-  margin-left: 4px;
-}
-
 /* ─── 외부 AI 백업 링크 ─── */
 .coach-backup-link {
   display: inline-flex;
@@ -660,4 +636,20 @@
 .coach-send-btn {
   padding: 10px 14px;
   flex-shrink: 0;
+}
+
+.retry-btn {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-bg);
+  background: var(--color-warning);
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+.retry-btn:hover {
+  opacity: 0.85;
 }
