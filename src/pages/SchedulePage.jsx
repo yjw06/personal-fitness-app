@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { useCountUp } from '../hooks/useCountUp'
 import { deleteSchedule, uploadScheduleCSV, readFileAsText, saveScheduleData } from '../services/csvService'
 import { useScheduleStore } from '../stores/scheduleStore'
 import { useWorkoutStore } from '../stores/workoutStore'
@@ -170,6 +171,7 @@ export default function SchedulePage() {
 
   const currentIndex = getCurrentScheduleIndex()
   const completedCount = schedules?.filter((s) => s.completed).length || 0
+  const animatedCompleted = useCountUp(completedCount)
   const totalCount = schedules?.length || 0
   const allDone = totalCount > 0 && completedCount === totalCount
   const weekDays = getWeekDays()
@@ -265,7 +267,7 @@ export default function SchedulePage() {
           <div className="schedule-summary card animate-fadeInUp" style={{ animationDelay: '0.15s' }}>
             <span className="ws-label">일정 진행</span>
             <span className="ws-count">
-              <strong>{completedCount}</strong> / {totalCount} 완료
+              <strong>{animatedCompleted}</strong> / {totalCount} 완료
             </span>
             <div className="progress-bar" style={{ flex: 1 }}>
               <div

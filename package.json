@@ -20,6 +20,7 @@
     "autoprefixer": "^10.5.0",
     "date-fns": "^4.2.1",
     "firebase": "^12.13.0",
+    "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
     "papaparse": "^5.5.3",
     "postcss": "^8.5.15",

@@ -259,6 +259,34 @@ p {
   height: 100%;
   border-radius: var(--radius-full);
   transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  animation: progress-load 0.8s cubic-bezier(0.4,0,0.2,1) both;
+}
+
+/* ─── View Transitions (탭 슬라이드) ─── */
+@keyframes vt-slide-out-left {
+  to { transform: translateX(-28px); opacity: 0; }
+}
+@keyframes vt-slide-in-right {
+  from { transform: translateX(28px); opacity: 0; }
+}
+@keyframes vt-slide-out-right {
+  to { transform: translateX(28px); opacity: 0; }
+}
+@keyframes vt-slide-in-left {
+  from { transform: translateX(-28px); opacity: 0; }
+}
+
+html[data-nav-dir='right']::view-transition-old(root) {
+  animation: 0.28s cubic-bezier(0.4, 0, 0.2, 1) both vt-slide-out-left;
+}
+html[data-nav-dir='right']::view-transition-new(root) {
+  animation: 0.28s cubic-bezier(0.4, 0, 0.2, 1) both vt-slide-in-right;
+}
+html[data-nav-dir='left']::view-transition-old(root) {
+  animation: 0.28s cubic-bezier(0.4, 0, 0.2, 1) both vt-slide-out-right;
+}
+html[data-nav-dir='left']::view-transition-new(root) {
+  animation: 0.28s cubic-bezier(0.4, 0, 0.2, 1) both vt-slide-in-left;
 }
 
 /* ─── Animations ─── */
@@ -287,16 +315,33 @@ p {
   50%      { box-shadow: 0 0 40px rgba(200,255,0,0.4); }
 }
 
+@keyframes banner-spring {
+  from { opacity: 0; transform: scale(0.82) translateY(14px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes emoji-pop {
+  0%   { transform: rotate(-15deg) scale(0); }
+  65%  { transform: rotate(8deg) scale(1.28); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes progress-load {
+  from { width: 0 !important; }
+}
+
 .animate-fadeInUp { animation: fadeInUp 0.4s cubic-bezier(0.4,0,0.2,1) both; }
 .animate-fadeIn   { animation: fadeIn 0.3s ease both; }
 
 /* ─── Loading spinner ─── */
 .spinner {
   width: 28px; height: 28px;
+  border-radius: 50%;
   border: 2.5px solid var(--color-surface-3);
   border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 0.6s linear infinite;
+  border-right-color: rgba(200, 255, 0, 0.4);
+  animation: spin 0.75s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+  filter: drop-shadow(0 0 5px rgba(200, 255, 0, 0.35));
 }
 
 /* ─── Empty state ─── */
