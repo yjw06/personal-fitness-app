@@ -8,6 +8,7 @@ import WorkoutPage    from './pages/WorkoutPage'
 import MealPage       from './pages/MealPage'
 import SchedulePage   from './pages/SchedulePage'
 import BodyPage       from './pages/BodyPage'
+import VolumePage     from './pages/VolumePage'
 import CoachPage      from './pages/CoachPage'
 import AssistantPage  from './pages/AssistantPage'
 import Header         from './components/Layout/Header'
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/workout"   element={<WorkoutPage />} />
           <Route path="/meal"      element={<MealPage />} />
           <Route path="/body"      element={<BodyPage />} />
+          <Route path="/volume"    element={<VolumePage />} />
           <Route path="/coach"     element={<CoachPage />} />
           <Route path="/assistant" element={<AssistantPage />} />
           <Route path="*"          element={<Navigate to="/schedule" replace />} />

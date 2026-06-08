@@ -2,15 +2,16 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { flushSync } from 'react-dom'
 import {
   Dumbbell, UtensilsCrossed, ClipboardList,
-  HeartPulse, Sparkles,
+  HeartPulse, Sparkles, TrendingUp,
 } from 'lucide-react'
 import './BottomNav.css'
 
 const TABS = [
-  { path: '/schedule', icon: ClipboardList, label: '스케줄' },
-  { path: '/workout',  icon: Dumbbell,       label: '운동' },
+  { path: '/schedule', icon: ClipboardList,  label: '스케줄' },
+  { path: '/workout',  icon: Dumbbell,        label: '운동' },
   { path: '/meal',     icon: UtensilsCrossed, label: '식단' },
   { path: '/body',     icon: HeartPulse,      label: '체성분' },
+  { path: '/volume',   icon: TrendingUp,      label: '볼륨' },
   { path: '/coach',    icon: Sparkles,        label: 'AI 코치', extra: 'nav-coach' },
 ]
 
