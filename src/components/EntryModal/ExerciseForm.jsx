@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Save } from 'lucide-react'
+import { useMemoryStore } from '../../stores/memoryStore'
 
 const BODY_PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '러닝']
 
@@ -19,6 +20,7 @@ export default function ExerciseForm({ initial, onSubmit, onCancel, workoutRows 
   const [rest, setRest]         = useState('60')
   const [weight, setWeight]     = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const progressTargets = useMemoryStore((s) => s.progressTargets)
 
   useEffect(() => {
     if (initial) {
@@ -64,6 +66,9 @@ export default function ExerciseForm({ initial, onSubmit, onCancel, workoutRows 
       setSubmitting(false)
     }
   }
+
+  const progressTarget = name.trim() ? (progressTargets ?? {})[name.trim()] : null
+  const showTargetChip = progressTarget?.targetKg != null
 
   return (
     <form className="em-form" onSubmit={handleSubmit}>
@@ -141,6 +146,15 @@ export default function ExerciseForm({ initial, onSubmit, onCancel, workoutRows 
             <button type="button" className="em-step-btn" onClick={() => stepWeight(2.5)}>+2.5</button>
             <button type="button" className="em-step-btn" onClick={() => stepWeight(5)}>+5</button>
           </div>
+          {showTargetChip && (
+            <button
+              type="button"
+              className={`em-target-chip ${progressTarget.status === 'hold' ? 'em-target-hold' : ''}`}
+              onClick={() => setWeight(String(progressTarget.targetKg))}
+            >
+              {progressTarget.status === 'hold' ? '⏸ 유지' : '🎯 AI 목표'} {progressTarget.targetKg}kg
+            </button>
+          )}
         </div>
       )}
 
