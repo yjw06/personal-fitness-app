@@ -7,8 +7,8 @@ const DEFAULT_MODEL = 'gemini-2.5-flash'
 
 // 503 high demand 발생 시 자동 폴백 체인
 const FALLBACK_CHAIN = {
-  'gemini-2.5-pro':        ['gemini-2.5-flash'],
-  'gemini-2.5-flash':      [],
+  'gemini-2.5-pro':        ['gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  'gemini-2.5-flash':      ['gemini-2.5-flash-lite'],
   'gemini-2.5-flash-lite': [],
 }
 
