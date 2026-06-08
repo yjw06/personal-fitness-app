@@ -9,7 +9,7 @@ import { useWorkoutStore } from '../stores/workoutStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { toast } from '../stores/toastStore'
 import {
-  callGeminiJSON, callGeminiChat, extractChatResponse, todayYmd,
+  callGeminiJSON, callGeminiChat, todayYmd,
   compressConversation, COMPRESS_AT,
 } from '../services/aiCoach'
 import { persistByKind, executeChatTool } from '../services/aiTools'
@@ -231,18 +231,13 @@ export default function CoachPage() {
         let response, text, functionCalls, raw
         let finishReason = ''
         for (let retry = 0; retry < 3; retry++) {
-          response = await callGeminiChat({
+          ;({ text, functionCalls, raw, finishReason } = await callGeminiChat({
             apiKey, model: aiModel, contents,
             memory: memData, autoSummary: summary,
             onModelSwitch: (from, to) => {
               toast.warning(`${from.replace('gemini-2.5-', '')} → ${to.replace('gemini-2.5-', '')} 자동 전환`)
             },
-          })
-          const ext = extractChatResponse(response)
-          text = ext.text
-          functionCalls = ext.functionCalls
-          raw = ext.raw
-          finishReason = ext.finishReason
+          }))
           if (text || functionCalls.length) break
           if (retry < 2) await new Promise((r) => setTimeout(r, 600))
         }
