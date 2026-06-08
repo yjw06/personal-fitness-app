@@ -28,6 +28,7 @@ export const useMemoryStore = create((set, get) => ({
   coachPersona: '',
   apiKey:       '',          // Gemini API 키
   aiNotes:      [],  // [{ key, value, ts }]
+  progressTargets: {},  // { [exercise_name]: { currentKg, targetKg, status, updatedAt } }
 
   // ─── 자동 요약 캐시 (메모리만) ───
   recentBody:        [],
@@ -64,6 +65,9 @@ export const useMemoryStore = create((set, get) => ({
         coachPersona: data?.coachPersona || '',
         apiKey:       data?.apiKey       || migratedKey,
         aiNotes:      Array.isArray(data?.aiNotes) ? data.aiNotes : [],
+        progressTargets: (data?.progressTargets && typeof data.progressTargets === 'object' && !Array.isArray(data.progressTargets))
+          ? data.progressTargets
+          : {},
         isLoaded:     true,
         loadedUid:    uid,
       })
@@ -110,9 +114,32 @@ export const useMemoryStore = create((set, get) => ({
     try { await saveMemory(uid, { aiNotes: [] }) } catch {}
   },
 
+  applyProgressTargets: async (uid, recommendations) => {
+    if (!uid) return
+    const { progressTargets } = get()
+    const next = { ...progressTargets }
+    for (const r of (recommendations ?? [])) {
+      if (!r.exercise_name) continue
+      if (r.status === 'increase' || r.status === 'new' || r.status === 'decrease') {
+        next[r.exercise_name] = {
+          currentKg: r.current_kg ?? null,
+          targetKg: r.target_kg ?? null,
+          status: 'pending',
+          updatedAt: Date.now(),
+        }
+      } else if (r.status === 'hold') {
+        if (next[r.exercise_name]) {
+          next[r.exercise_name] = { ...next[r.exercise_name], status: 'hold', updatedAt: Date.now() }
+        }
+      }
+    }
+    set({ progressTargets: next })
+    try { await saveMemory(uid, { progressTargets: next }) } catch {}
+  },
+
   clearAllMemory: async (uid) => {
     if (!uid) return
-    const patch = { profile: '', workoutPlan: '', mealPlan: '', coachPersona: '', aiNotes: [] }
+    const patch = { profile: '', workoutPlan: '', mealPlan: '', coachPersona: '', aiNotes: [], progressTargets: {} }
     set(patch)
     try { await saveMemory(uid, patch) } catch {}
   },
@@ -154,7 +181,7 @@ export const useMemoryStore = create((set, get) => ({
   // 로그아웃 시 호출
   reset: () => set({
     profile: '', workoutPlan: '', mealPlan: '', coachPersona: '',
-    apiKey: '', aiNotes: [],
+    apiKey: '', aiNotes: [], progressTargets: {},
     recentBody: [], recentWorkouts: [],
     isLoaded: false, loadedUid: null,
   }),
