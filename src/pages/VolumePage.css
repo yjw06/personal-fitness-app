@@ -130,7 +130,7 @@
 .vol-ai-response ul, .vol-ai-response ol { padding-left: 1.25rem; margin: 0 0 0.5rem; }
 .vol-ai-response li { margin-bottom: 0.25rem; }
 .vol-ai-response strong { color: var(--color-primary); }
-.vol-ai-response h3 { font-size: 0.85rem; margin: 0.75rem 0 0.25rem; color: var(--color-text); }
+.vol-ai-response h2, .vol-ai-response h3 { font-size: 0.85rem; margin: 0.75rem 0 0.25rem; color: var(--color-text); }
 
 .vol-ai-error {
   margin-top: 0.75rem;

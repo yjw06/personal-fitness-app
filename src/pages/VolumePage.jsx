@@ -6,7 +6,7 @@ import { useWorkoutStore } from '../stores/workoutStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useMemoryStore } from '../stores/memoryStore'
 import { fetchVolumeHistory } from '../services/csvService'
-import { callGeminiChat, extractChatResponse } from '../services/aiCoach'
+import { callGeminiChat } from '../services/aiCoach'
 import {
   aggregateVolumeByPart, totalVolume,
   calcExerciseVolume, fmtVolume,
@@ -125,14 +125,13 @@ ${weeklyLines}
         coachPersona: memory.coachPersona,
         aiNotes: memory.aiNotes,
       }
-      const response = await callGeminiChat({
+      const { text } = await callGeminiChat({
         apiKey,
         model: aiModel,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         memory: memSnap,
         autoSummary: {},
       })
-      const { text } = extractChatResponse(response)
       setAiResponse(text || '응답이 비었어요. 잠시 후 다시 시도해 주세요.')
     } catch (err) {
       setAiError(err.message || '분석 요청 중 오류가 발생했어요.')
