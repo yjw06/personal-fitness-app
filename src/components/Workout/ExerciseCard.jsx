@@ -1,5 +1,5 @@
 import './ExerciseCard.css'
-import { calcExerciseVolume, fmtVolume } from '../../utils/volumeUtils'
+import { calcExerciseVolume, calcRepVolume, isCardio, fmtVolume } from '../../utils/volumeUtils'
 
 const PART_COLORS = {
   '가슴': '#6366f1',
@@ -52,6 +52,10 @@ export default function ExerciseCard({ exercise, index, isCompleted, isCurrent, 
           {volume != null && (
             <span className="ex-volume"> · {fmtVolume(volume)}kg</span>
           )}
+          {exercise.weight_kg == null && !isCardio(exercise) && (() => {
+            const repVol = calcRepVolume(exercise)
+            return repVol != null ? <span className="ex-bodyweight"> · 맨몸 {repVol}회</span> : null
+          })()}
         </p>
       </div>
 

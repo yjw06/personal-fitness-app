@@ -9,7 +9,7 @@ import { fetchVolumeHistory } from '../services/csvService'
 import { callGeminiChat } from '../services/aiCoach'
 import {
   aggregateVolumeByPart, totalVolume,
-  calcExerciseVolume, fmtVolume,
+  calcExerciseVolume, calcRepVolume, isCardio, fmtVolume,
 } from '../utils/volumeUtils'
 import LineChart from '../components/Chart/LineChart'
 import BarChart  from '../components/Chart/BarChart'
@@ -188,19 +188,27 @@ ${weeklyLines}
                   {ex.sets}×{ex.reps_or_duration}
                   {ex.weight_kg != null ? ` · ${ex.weight_kg}kg` : ''}
                 </span>
-                {vol != null && (
-                  <span className="vol-ex-volume">{fmtVolume(vol)}kg</span>
-                )}
+                {vol != null && <span className="vol-ex-volume">{fmtVolume(vol)}kg</span>}
+                {vol == null && !isCardio(ex) && ex.weight_kg == null && (() => {
+                  const rv = calcRepVolume(ex)
+                  return rv != null ? <span className="vol-ex-volume" style={{ color: 'var(--color-text-muted)' }}>맨몸 {rv}회</span> : null
+                })()}
               </div>
             )
           })}
         </div>
 
-        {todayExercises.length > 0 && !hasWeightToday && (
-          <p className="vol-no-weight-hint">
-            운동 탭에서 종목 편집 → 중량을 입력하면 볼륨이 자동 계산됩니다.
-          </p>
-        )}
+        {todayExercises.length > 0 && !hasWeightToday && (() => {
+          const weightedCount = todayExercises.filter((e) => !isCardio(e)).length
+          const bodyweightCount = todayExercises.filter((e) => !isCardio(e) && e.weight_kg == null).length
+          if (weightedCount === 0) return null  // 모두 러닝
+          if (bodyweightCount === weightedCount) {
+            // 모두 맨몸 운동
+            return <p className="vol-no-weight-hint">맨몸 운동은 kg 볼륨 대신 총 반복 횟수로 표시됩니다.</p>
+          }
+          // 일부 중량 미설정
+          return <p className="vol-no-weight-hint">운동 탭에서 종목 편집 → 중량을 입력하면 볼륨이 자동 계산됩니다.</p>
+        })()}
         {todayExercises.length === 0 && (
           <p className="vol-no-weight-hint">운동 탭에서 오늘의 운동을 추가하세요.</p>
         )}

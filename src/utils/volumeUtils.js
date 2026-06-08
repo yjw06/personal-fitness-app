@@ -47,3 +47,20 @@ export function totalVolume(exercises) {
 export function fmtVolume(n) {
   return Math.round(n).toLocaleString('ko-KR')
 }
+
+/** 러닝 여부 */
+export function isCardio(exercise) {
+  return exercise?.body_part === '러닝'
+}
+
+/**
+ * 맨몸 운동 rep 볼륨: sets × avgReps (중량 없음, 러닝 아님)
+ * 중량 있거나 러닝이면 null
+ */
+export function calcRepVolume(exercise) {
+  if (exercise?.weight_kg != null || isCardio(exercise)) return null
+  const sets = parseInt(exercise?.sets)
+  const reps = parseAvgReps(exercise?.reps_or_duration)
+  if (!sets || !reps) return null
+  return sets * reps
+}

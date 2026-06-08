@@ -93,6 +93,11 @@
   font-size: 0.75em;
 }
 
+.ex-bodyweight {
+  color: var(--color-text-muted);
+  font-size: 0.75em;
+}
+
 /* 현재 운동 표시 점 */
 .ex-current-dot {
   width: 8px;
