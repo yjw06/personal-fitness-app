@@ -56,6 +56,10 @@ export const WORKOUT_SCHEMA = {
             type: 'integer',
             description: 'Rest between sets (sec). Usually 60, finisher 75-90, running = 0',
           },
+          weight_kg: {
+            type: 'number',
+            description: 'Target weight in kg. Provide for all weighted exercises (barbell, dumbbell, machine, cable). Omit for running and pure bodyweight exercises. Use user profile to estimate — beginner benchmarks: squat ≈ 0.5×BW, bench ≈ 0.4×BW, OHP ≈ 0.3×BW, deadlift ≈ 0.6×BW, curl ≈ 0.2×BW. Machines/cables: 10–30kg typical.',
+          },
         },
         required: ['exercise_name', 'body_part', 'sets', 'reps_or_duration', 'rest_seconds'],
       },
@@ -225,6 +229,7 @@ ${ctx}${plan}
 - Reps as a range ("10-12", "12-15"). Finisher = "최대 횟수" with 2 sets + 75s rest.
 - For running, write pace and recovery in the name (e.g. "400m 인터벌 런 (13-14km/h 질주 90초 + 6km/h 90초 회복)"). rest_seconds = 0. sets = interval count. reps_or_duration = total minutes.
 - Default rest_seconds = 60.
+- **weight_kg**: Provide for every weighted exercise. Estimate from user profile (body weight × ratio above). If unknown, use absolute beginner defaults (bench 30kg, squat 40kg, deadlift 50kg, curl 10kg, cable 15kg). Running and pure bodyweight: omit weight_kg entirely.
 
 # Output Language
 All string values (exercise_name etc.) MUST be in Korean.

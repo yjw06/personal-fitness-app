@@ -5,8 +5,9 @@ import Papa from 'papaparse'
 export const SCHEMAS = {
   workout: {
     required: ['exercise_name', 'body_part', 'sets', 'reps_or_duration', 'rest_seconds'],
+    optional: ['weight_kg'],
     label: '운동',
-    hint: 'exercise_name,body_part,sets,reps_or_duration,rest_seconds',
+    hint: 'exercise_name,body_part,sets,reps_or_duration,rest_seconds,weight_kg',
   },
   meal: {
     required: ['meal_type', 'food_name'],
