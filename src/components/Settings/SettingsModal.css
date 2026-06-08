@@ -381,15 +381,15 @@
   flex-direction: column;
   gap: 6px;
   padding: var(--space-sm) 0;
-  max-height: 240px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
 .set-note-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: var(--color-surface-2);
   border-radius: var(--radius-sm);
 }
@@ -398,12 +398,12 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
 }
 
 .set-note-key {
-  font-size: 0.625rem;
+  font-size: 0.72rem;
   color: var(--color-primary);
   font-weight: 700;
   text-transform: uppercase;
@@ -411,13 +411,14 @@
 }
 
 .set-note-value {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   color: var(--color-text);
   word-break: break-word;
+  line-height: 1.5;
 }
 
 .set-note-date {
-  font-size: 0.625rem;
+  font-size: 0.72rem;
   color: var(--color-text-3);
 }
 
