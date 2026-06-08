@@ -229,7 +229,7 @@ ${ctx}${plan}
 - Reps as a range ("10-12", "12-15"). Finisher = "최대 횟수" with 2 sets + 75s rest.
 - For running, write pace and recovery in the name (e.g. "400m 인터벌 런 (13-14km/h 질주 90초 + 6km/h 90초 회복)"). rest_seconds = 0. sets = interval count. reps_or_duration = total minutes.
 - Default rest_seconds = 60.
-- **weight_kg**: Provide for every weighted exercise. Estimate from user profile (body weight × ratio above). If unknown, use absolute beginner defaults (bench 30kg, squat 40kg, deadlift 50kg, curl 10kg, cable 15kg). Running and pure bodyweight: omit weight_kg entirely.
+- **weight_kg**: Provide for every weighted exercise. Estimate from user profile (body weight × ratio above). If a \`volume_summary\` memory note exists, back-calculate per-set weight: volume_summary_kg ÷ (sets × reps) gives approximate working weight — use this as the base and adjust ±10%. If no data, use beginner defaults (bench 30kg, squat 40kg, deadlift 50kg, curl 10kg, cable 15kg). Running and pure bodyweight: omit weight_kg entirely.
 
 # Output Language
 All string values (exercise_name etc.) MUST be in Korean.

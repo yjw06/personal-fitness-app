@@ -133,6 +133,18 @@ ${weeklyLines}
         autoSummary: {},
       })
       setAiResponse(text || '응답이 비었어요. 잠시 후 다시 시도해 주세요.')
+
+      // Save volume summary to AI memory for future use
+      if (text && user) {
+        const summaryLine = `(${selectedDate}) 총볼륨 ${fmtVolume(totalToday)}kg` +
+          (Object.keys(byPartToday).length
+            ? `. 부위별: ${Object.entries(byPartToday).map(([p, v]) => `${p} ${fmtVolume(v)}kg`).join(', ')}`
+            : '') +
+          (Object.keys(partTotals7).length
+            ? `. 7일누적: ${Object.entries(partTotals7).map(([p, v]) => `${p} ${fmtVolume(v)}kg`).join(', ')}`
+            : '')
+        await memory.addAiNote(user.uid, 'volume_summary', summaryLine).catch(() => {})
+      }
     } catch (err) {
       setAiError(err.message || '분석 요청 중 오류가 발생했어요.')
     } finally {
