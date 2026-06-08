@@ -146,3 +146,73 @@
   font-size: 0.85rem;
   line-height: 1.6;
 }
+
+/* ─── 진행성 과부하 계획 ─── */
+.vol-prog-btn {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.vol-prog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.vol-prog-card {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.625rem 0.875rem;
+}
+
+.vol-prog-card.vol-prog-increase { border-left: 3px solid var(--color-primary); }
+.vol-prog-card.vol-prog-decrease { border-left: 3px solid #ef4444; }
+.vol-prog-card.vol-prog-hold     { border-left: 3px solid var(--color-text-muted); }
+.vol-prog-card.vol-prog-new      { border-left: 3px solid #22d3ee; }
+
+.vol-prog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.vol-prog-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.vol-prog-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.vol-prog-card.vol-prog-increase .vol-prog-badge { color: var(--color-primary); }
+.vol-prog-card.vol-prog-decrease .vol-prog-badge { color: #ef4444; }
+.vol-prog-card.vol-prog-new      .vol-prog-badge { color: #22d3ee; }
+
+.vol-prog-kg {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-bottom: 0.25rem;
+}
+.vol-prog-kg strong { color: var(--color-text); }
+
+.vol-prog-reason {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.vol-prog-apply-btn {
+  width: 100%;
+  margin-top: 0.875rem;
+}

@@ -6,15 +6,36 @@ import { useWorkoutStore } from '../stores/workoutStore'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useMemoryStore } from '../stores/memoryStore'
 import { fetchVolumeHistory } from '../services/csvService'
-import { callGeminiChat } from '../services/aiCoach'
+import { callGeminiChat, callGeminiJSON } from '../services/aiCoach'
 import {
   aggregateVolumeByPart, totalVolume,
   calcExerciseVolume, calcRepVolume, isCardio, fmtVolume,
 } from '../utils/volumeUtils'
 import LineChart from '../components/Chart/LineChart'
 import BarChart  from '../components/Chart/BarChart'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, TrendingUp } from 'lucide-react'
 import './VolumePage.css'
+
+const PROGRESSION_SCHEMA = {
+  type: 'object',
+  properties: {
+    recommendations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          exercise_name: { type: 'string' },
+          current_kg:    { type: 'number' },
+          target_kg:     { type: 'number' },
+          status:        { type: 'string', enum: ['increase', 'hold', 'decrease', 'new'] },
+          reason:        { type: 'string' },
+        },
+        required: ['exercise_name', 'current_kg', 'target_kg', 'status', 'reason'],
+      },
+    },
+  },
+  required: ['recommendations'],
+}
 
 const PART_COLORS = {
   '가슴': '#6366f1', '등': '#22d3ee', '하체': '#10b981',
@@ -34,6 +55,10 @@ export default function VolumePage() {
   const [aiResponse, setAiResponse]   = useState('')
   const [aiLoading, setAiLoading]     = useState(false)
   const [aiError, setAiError]         = useState('')
+
+  const [progression, setProgression]     = useState(null)
+  const [progLoading, setProgLoading]     = useState(false)
+  const [progError, setProgError]         = useState('')
 
   // 14일 히스토리 조회
   const loadHistory = useCallback(async () => {
@@ -152,6 +177,66 @@ ${weeklyLines}
     }
   }, [apiKey, aiModel, memory, todayExercises, byPartToday, partTotals7, totalToday, selectedDate])
 
+  const handleProgressionPlan = useCallback(async () => {
+    if (!apiKey) { setProgError('설정에서 Gemini API 키를 먼저 등록해 주세요.'); return }
+    setProgLoading(true)
+    setProgError('')
+    setProgression(null)
+
+    // Build exercise history text from 14-day data
+    const historyText = history
+      .filter(({ rows }) => rows.some((r) => r.weight_kg != null))
+      .map(({ date, rows }) => {
+        const exs = rows
+          .filter((r) => r.weight_kg != null)
+          .map((r) => `${r.exercise_name}(${r.weight_kg}kg×${r.sets}세트×${r.reps_or_duration})`)
+          .join(', ')
+        return exs ? `${date}: ${exs}` : null
+      })
+      .filter(Boolean)
+      .join('\n') || '기록 없음'
+
+    // Build current targets text
+    const targetsText = Object.keys(memory.progressTargets ?? {}).length
+      ? Object.entries(memory.progressTargets).map(([name, t]) =>
+          `- ${name}: 현재${t.currentKg}kg → 목표${t.targetKg}kg (${t.status === 'hold' ? '홀드중' : '진행중'})`
+        ).join('\n')
+      : '없음 (첫 분석)'
+
+    const system = `너는 진행성 과부하 전문 피트니스 코치야.
+사용자의 최근 운동 기록을 분석해서 운동별 다음 목표 중량을 제안해.
+
+[현재 진행 목표]
+${targetsText}
+
+[최근 14일 중량 운동 기록]
+${historyText}
+
+각 중량 운동에 대해 recommendations 배열에 포함해:
+- status: "increase"(목표 달성, 증량 준비) | "hold"(현재 유지) | "decrease"(감량 권장) | "new"(첫 기록)
+- current_kg: 가장 최근 기록된 중량
+- target_kg: 다음 목표 (hold면 current_kg와 동일)
+- reason: 판단 근거 (한국어 1-2문장)
+
+증량 기준: 같은 중량 2회 이상 기록 → increase 검토. 상체 +2.5~5kg, 하체 +5~10kg.
+불규칙하거나 1회만 기록 → hold. 중량 없는 운동(맨몸/런닝) → 제외.`
+
+    try {
+      const { data } = await callGeminiJSON({
+        apiKey,
+        model: aiModel,
+        system,
+        schema: PROGRESSION_SCHEMA,
+        maxOutputTokens: 2048,
+      })
+      setProgression(data?.recommendations ?? [])
+    } catch (err) {
+      setProgError(err.message || '진행 계획 분석 중 오류가 발생했어요.')
+    } finally {
+      setProgLoading(false)
+    }
+  }, [apiKey, aiModel, history, memory.progressTargets])
+
   return (
     <main className="page-content volume-page" role="main">
 
@@ -261,6 +346,53 @@ ${weeklyLines}
           <div className="vol-ai-response">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiResponse}</ReactMarkdown>
           </div>
+        )}
+      </section>
+
+      {/* ── 섹션 5: 진행성 과부하 계획 ── */}
+      <section className="volume-section">
+        <p className="volume-section-title">진행성 과부하 계획</p>
+        <button
+          className="btn btn-ghost vol-prog-btn"
+          onClick={handleProgressionPlan}
+          disabled={progLoading}
+        >
+          {progLoading
+            ? <><span className="spinner" style={{ width: 14, height: 14 }} /> 분석 중...</>
+            : <><TrendingUp size={14} /> 다음 목표 중량 계산</>}
+        </button>
+        {progError && <p className="vol-ai-error">{progError}</p>}
+        {progression && progression.length > 0 && (
+          <>
+            <div className="vol-prog-list">
+              {progression.map((r) => (
+                <div key={r.exercise_name} className={`vol-prog-card vol-prog-${r.status}`}>
+                  <div className="vol-prog-header">
+                    <span className="vol-prog-name">{r.exercise_name}</span>
+                    <span className="vol-prog-badge">
+                      {r.status === 'increase' ? '↑ 증량' : r.status === 'decrease' ? '↓ 감량' : r.status === 'new' ? '신규' : '유지'}
+                    </span>
+                  </div>
+                  <div className="vol-prog-kg">
+                    {r.current_kg}kg → <strong>{r.target_kg}kg</strong>
+                  </div>
+                  <p className="vol-prog-reason">{r.reason}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              className="btn btn-primary vol-prog-apply-btn"
+              onClick={() => {
+                memory.applyProgressTargets(user.uid, progression)
+                setProgression(null)
+              }}
+            >
+              목표 중량 저장
+            </button>
+          </>
+        )}
+        {progression && progression.length === 0 && (
+          <p className="vol-no-weight-hint">중량이 기록된 운동이 없어 계획을 수립할 수 없어요.</p>
         )}
       </section>
 
