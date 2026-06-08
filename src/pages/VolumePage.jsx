@@ -25,9 +25,9 @@ export default function VolumePage() {
   const { user } = useAuth()
   const workoutData  = useWorkoutStore((s) => s.workoutData)
   const selectedDate = useWorkoutStore((s) => s.selectedDate)
-  const apiKey  = useSettingsStore((s) => s.apiKey)
   const aiModel = useSettingsStore((s) => s.aiModel)
   const memory  = useMemoryStore()
+  const apiKey  = memory.apiKey
 
   const [history, setHistory]         = useState([])
   const [histLoading, setHistLoading] = useState(false)
