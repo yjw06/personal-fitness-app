@@ -228,4 +228,22 @@ export function readFileAsText(file) {
   })
 }
 
+/**
+ * 최근 N일의 운동 데이터를 병렬 조회
+ * @returns {Promise<Array<{ date: string, rows: object[] }>>} 오래된 날짜 → 최신 순
+ */
+export async function fetchVolumeHistory(uid, days = 14) {
+  const today = new Date()
+  const dates = Array.from({ length: days }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(today.getDate() - (days - 1 - i))  // oldest first
+    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
+  })
+  const snaps = await Promise.all(dates.map((date) => fetchWorkout(uid, date)))
+  return dates.map((date, i) => ({
+    date,
+    rows: snaps[i]?.rows ?? [],
+  }))
+}
+
 export { parseCSV, SCHEMAS }
