@@ -16,6 +16,7 @@ export default function ExerciseForm({ initial, onSubmit, onCancel }) {
   const [sets, setSets]         = useState('3')
   const [reps, setReps]         = useState('')
   const [rest, setRest]         = useState('60')
+  const [weight, setWeight]     = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function ExerciseForm({ initial, onSubmit, onCancel }) {
       setSets(String(initial.sets ?? '3'))
       setReps(String(initial.reps_or_duration ?? ''))
       setRest(String(initial.rest_seconds ?? '60'))
+      setWeight(initial.weight_kg != null ? String(initial.weight_kg) : '')
     }
   }, [initial])
 
@@ -39,6 +41,9 @@ export default function ExerciseForm({ initial, onSubmit, onCancel }) {
         sets: String(parseInt(sets) || 3),
         reps_or_duration: reps.trim() || '8-10',
         rest_seconds: String(parseInt(rest) || 60),
+        ...(weight.trim() && !isNaN(parseFloat(weight)) && part !== '러닝'
+          ? { weight_kg: parseFloat(weight) }
+          : {}),
       })
     } finally {
       setSubmitting(false)
@@ -99,6 +104,24 @@ export default function ExerciseForm({ initial, onSubmit, onCancel }) {
           />
         </div>
       </div>
+
+      {part !== '러닝' && (
+        <div className="em-row">
+          <label className="em-label" htmlFor="ex-weight">목표 중량 (kg)</label>
+          <input
+            id="ex-weight"
+            className="em-input"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            max="500"
+            step="0.5"
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
+            placeholder="예: 60  (없으면 공백)"
+          />
+        </div>
+      )}
 
       <div className="em-row">
         <label className="em-label" htmlFor="ex-rest">세트 간 휴식 (초)</label>
