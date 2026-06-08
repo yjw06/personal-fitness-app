@@ -9,8 +9,9 @@ const BODY_PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '러�
  *   initial?  기존 행 (편집 모드)
  *   onSubmit  (row) => Promise
  *   onCancel  () => void
+ *   workoutRows?  기존 운동 데이터 (자동완성용)
  */
-export default function ExerciseForm({ initial, onSubmit, onCancel }) {
+export default function ExerciseForm({ initial, onSubmit, onCancel, workoutRows = [] }) {
   const [name, setName]         = useState('')
   const [part, setPart]         = useState(BODY_PARTS[0])
   const [sets, setSets]         = useState('3')
@@ -29,6 +30,20 @@ export default function ExerciseForm({ initial, onSubmit, onCancel }) {
       setWeight(initial.weight_kg != null ? String(initial.weight_kg) : '')
     }
   }, [initial])
+
+  useEffect(() => {
+    if (initial || !name.trim()) return
+    const match = (workoutRows ?? []).find(
+      (r) => r.exercise_name?.toLowerCase() === name.trim().toLowerCase() && r.weight_kg != null
+    )
+    if (match) setWeight(String(match.weight_kg))
+  }, [name, initial, workoutRows])
+
+  const stepWeight = (delta) => {
+    const curr = parseFloat(weight) || 0
+    const next = Math.max(0, curr + delta)
+    setWeight(Number.isInteger(next) ? String(next) : next.toFixed(1))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -108,18 +123,24 @@ export default function ExerciseForm({ initial, onSubmit, onCancel }) {
       {part !== '러닝' && (
         <div className="em-row">
           <label className="em-label" htmlFor="ex-weight">목표 중량 (kg)</label>
-          <input
-            id="ex-weight"
-            className="em-input"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            max="500"
-            step="0.5"
-            value={weight}
-            onChange={(e) => setWeight(e.target.value)}
-            placeholder="예: 60  (없으면 공백)"
-          />
+          <div className="em-weight-row">
+            <button type="button" className="em-step-btn" onClick={() => stepWeight(-5)}>−5</button>
+            <button type="button" className="em-step-btn" onClick={() => stepWeight(-2.5)}>−2.5</button>
+            <input
+              id="ex-weight"
+              className="em-input em-weight-input"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max="500"
+              step="0.5"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="kg"
+            />
+            <button type="button" className="em-step-btn" onClick={() => stepWeight(2.5)}>+2.5</button>
+            <button type="button" className="em-step-btn" onClick={() => stepWeight(5)}>+5</button>
+          </div>
         </div>
       )}
 

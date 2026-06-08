@@ -282,6 +282,7 @@ export default function WorkoutPage() {
           initial={editIndex != null ? workoutData?.[editIndex] : null}
           onSubmit={handleSaveEntry}
           onCancel={closeModal}
+          workoutRows={workoutData ?? []}
         />
       </EntryModal>
 

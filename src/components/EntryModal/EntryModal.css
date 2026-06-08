@@ -100,3 +100,32 @@
 .em-actions .btn {
   flex: 1;
 }
+
+.em-weight-row {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.em-weight-input {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+}
+.em-step-btn {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+}
+.em-step-btn:active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
