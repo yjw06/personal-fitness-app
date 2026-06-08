@@ -1,4 +1,5 @@
 import './ExerciseCard.css'
+import { calcExerciseVolume, fmtVolume } from '../../utils/volumeUtils'
 
 const PART_COLORS = {
   '가슴': '#6366f1',
@@ -15,6 +16,7 @@ const PART_COLORS = {
  */
 export default function ExerciseCard({ exercise, index, isCompleted, isCurrent, onClick }) {
   const color = PART_COLORS[exercise.body_part] ?? 'var(--color-primary)'
+  const volume = calcExerciseVolume(exercise)
 
   return (
     <article
@@ -43,6 +45,12 @@ export default function ExerciseCard({ exercise, index, isCompleted, isCurrent, 
           {exercise.sets}세트 × {exercise.reps_or_duration}
           {exercise.rest_seconds && (
             <span className="ex-rest"> · 휴식 {exercise.rest_seconds}초</span>
+          )}
+          {exercise.weight_kg != null && (
+            <span className="ex-weight"> · {exercise.weight_kg}kg</span>
+          )}
+          {volume != null && (
+            <span className="ex-volume"> · {fmtVolume(volume)}kg</span>
           )}
         </p>
       </div>
