@@ -58,7 +58,7 @@ export const WORKOUT_SCHEMA = {
           },
           weight_kg: {
             type: 'number',
-            description: 'Target weight in kg. Provide for all weighted exercises (barbell, dumbbell, machine, cable). Omit for running and pure bodyweight exercises. Use user profile to estimate — beginner benchmarks: squat ≈ 0.5×BW, bench ≈ 0.4×BW, OHP ≈ 0.3×BW, deadlift ≈ 0.6×BW, curl ≈ 0.2×BW. Machines/cables: 10–30kg typical.',
+            description: 'REQUIRED for all barbell/dumbbell/machine/cable exercises. Omit ONLY for running and pure bodyweight (push-ups, pull-ups, plank). Use Progressive Overload Targets if listed; otherwise estimate from BW (squat 0.6×BW, bench 0.4×BW, deadlift 0.7×BW, OHP 0.3×BW, curl 0.2×BW, cable 15kg).',
           },
         },
         required: ['exercise_name', 'body_part', 'sets', 'reps_or_duration', 'rest_seconds'],
@@ -203,6 +203,20 @@ YYYYMMDD: ${ymd} — Weekday: ${dayKo}요일 (${dayEn})
     })
   }
 
+  // 점진적 과부하 목표 중량 — weight_kg 설정 최우선 참고
+  const pt = memory.progressTargets
+  if (pt && typeof pt === 'object') {
+    const entries = Object.entries(pt).filter(([, t]) => t?.targetKg != null).slice(0, 12)
+    if (entries.length > 0) {
+      ctx += `\n# Progressive Overload Targets (USE as weight_kg — highest priority)\n`
+      entries.forEach(([name, t]) => {
+        const tag = t.status === 'hold' ? '유지' : '목표'
+        ctx += `- ${name}: ${tag} ${t.targetKg}kg (현재 ${t.currentKg ?? '?'}kg)\n`
+      })
+      ctx += `→ For exercises listed above, set weight_kg = targetKg. For others, estimate from profile.\n`
+    }
+  }
+
   // 오늘 특이사항 — 사용자가 직접 입력 (가장 우선순위 높게 반영)
   const notes = (extraNotes || '').trim()
   if (notes) {
@@ -232,7 +246,11 @@ ${ctx}${plan}
 - Reps as a range ("10-12", "12-15"). Finisher = "최대 횟수" with 2 sets + 75s rest.
 - For running, write pace and recovery in the name (e.g. "400m 인터벌 런 (13-14km/h 질주 90초 + 6km/h 90초 회복)"). rest_seconds = 0. sets = interval count. reps_or_duration = total minutes.
 - Default rest_seconds = 60.
-- **weight_kg**: Provide for every weighted exercise. Estimate from user profile (body weight × ratio above). If a \`volume_summary\` memory note exists, back-calculate per-set weight: volume_summary_kg ÷ (sets × reps) gives approximate working weight — use this as the base and adjust ±10%. If no data, use beginner defaults (bench 30kg, squat 40kg, deadlift 50kg, curl 10kg, cable 15kg). Running and pure bodyweight: omit weight_kg entirely.
+- **weight_kg: REQUIRED for every non-bodyweight, non-running exercise. NEVER omit.** Priority:
+  1. Progressive Overload Targets section above (targetKg) — use exactly if listed
+  2. User Profile body weight × ratio: squat 0.6×BW, bench 0.4×BW, deadlift 0.7×BW, OHP 0.3×BW, curl 0.2×BW, cable/machine 0.15×BW
+  3. Beginner defaults: bench 30kg, squat 40kg, deadlift 50kg, OHP 25kg, curl 10kg, cable/machine 15kg
+  - Omit weight_kg ONLY for running and pure bodyweight (팔굽혀펴기, 턱걸이, 플랭크 etc.)
 
 # Output Language
 All string values (exercise_name etc.) MUST be in Korean.

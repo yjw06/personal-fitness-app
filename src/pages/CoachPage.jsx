@@ -81,6 +81,7 @@ export default function CoachPage() {
       mealPlan: m.mealPlan,
       coachPersona: m.coachPersona,
       aiNotes: m.aiNotes,
+      progressTargets: m.progressTargets,
     }
   }
   const getSummarySnapshot = () => {

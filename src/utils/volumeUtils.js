@@ -22,6 +22,37 @@ export function isAssistExercise(exercise) {
   return name.includes('어시스트') || name.includes('assist')
 }
 
+/** 러닝 여부 */
+export function isCardio(exercise) {
+  return exercise?.body_part === '러닝'
+}
+
+// 명시적으로 맨몸 운동인 종목 키워드 (weight_kg 없을 때만 체중 적용)
+const BODYWEIGHT_KEYWORDS = [
+  '팔굽혀펴기', '푸시업', '푸쉬업',
+  '딥스',
+  '턱걸이', '풀업',
+  '크런치', '윗몸일으키기', '싯업',
+  '버피',
+  '플랭크',
+  '마운틴클라이머', '마운틴 클라이머',
+  '레그레이즈', '힙레이즈', '글루트브릿지', '글루트 브릿지',
+  'push-up', 'pushup', 'push up',
+  'dip', 'pull-up', 'pullup', 'chin-up', 'chinup',
+  'crunch', 'plank', 'burpee', 'leg raise', 'mountain climber',
+  'sit-up', 'situp', 'glute bridge',
+]
+
+/** 명시적 맨몸 운동 여부 — weight_kg 없고 키워드 or 코어 부위면 체중으로 볼륨 계산 */
+export function isBodyweightExercise(exercise) {
+  if (exercise?.weight_kg != null) return false
+  if (isCardio(exercise) || isAssistExercise(exercise)) return false
+  // 코어 부위는 중량 미설정이면 맨몸으로 처리 (케이블 크런치 등 중량 있는 경우는 위에서 제외됨)
+  if (exercise?.body_part === '코어') return true
+  const name = (exercise?.exercise_name ?? '').toLowerCase()
+  return BODYWEIGHT_KEYWORDS.some((kw) => name.includes(kw))
+}
+
 /**
  * 단일 운동 행의 볼륨(kg). 러닝·시간제이면 null.
  * @param {object} exercise
@@ -43,12 +74,11 @@ export function calcExerciseVolume(exercise, bodyWeight = null) {
   }
 
   if (!isNaN(rawW) && rawW > 0) {
-    // 일반 중량 운동
     return sets * reps * rawW
   }
 
-  // 맨몸 운동 (weight_kg 없음) — 체중이 등록된 경우 체중으로 계산
-  if (bodyWeight && bodyWeight > 0) {
+  // 명시적 맨몸 운동 키워드 매칭 시에만 체중으로 계산 (중량 미입력 운동은 제외)
+  if (isBodyweightExercise(exercise) && bodyWeight && bodyWeight > 0) {
     return sets * reps * bodyWeight
   }
 
@@ -79,11 +109,6 @@ export function totalVolume(exercises, bodyWeight = null) {
 /** "1,980" 형식 포맷 (소수점 없음) */
 export function fmtVolume(n) {
   return Math.round(n).toLocaleString('ko-KR')
-}
-
-/** 러닝 여부 */
-export function isCardio(exercise) {
-  return exercise?.body_part === '러닝'
 }
 
 /**

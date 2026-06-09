@@ -57,9 +57,9 @@ export default function LineChart({
 
   // X축 라벨: 처음/중간/마지막
   const xLabels = data.length <= 6
-    ? data.map((d, i) => ({ ...d, x: PAD_L + i * xStep }))
+    ? data.map((d, i) => ({ label: d.x, x: PAD_L + i * xStep }))
     : [0, Math.floor(data.length / 2), data.length - 1].map((i) => ({
-        ...data[i],
+        label: data[i].x,
         x: PAD_L + i * xStep,
       }))
 
@@ -133,7 +133,7 @@ export default function LineChart({
             textAnchor="middle"
             fontFamily="inherit"
           >
-            {d.x}
+            {d.label}
           </text>
         ))}
       </svg>
