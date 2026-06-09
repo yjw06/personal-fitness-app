@@ -9,7 +9,7 @@ import { fetchVolumeHistory } from '../services/csvService'
 import { callGeminiChat, callGeminiJSON } from '../services/aiCoach'
 import {
   aggregateVolumeByPart, totalVolume,
-  calcExerciseVolume, calcRepVolume, isCardio, fmtVolume,
+  calcExerciseVolume, calcRepVolume, isCardio, isAssistExercise, fmtVolume,
 } from '../utils/volumeUtils'
 import LineChart from '../components/Chart/LineChart'
 import BarChart  from '../components/Chart/BarChart'
@@ -295,7 +295,7 @@ ${historyText}
                   {ex.weight_kg != null ? ` · ${ex.weight_kg}kg` : ''}
                 </span>
                 {vol != null && <span className="vol-ex-volume">{fmtVolume(vol)}kg</span>}
-                {vol == null && !isCardio(ex) && ex.weight_kg == null && (() => {
+                {vol == null && !isCardio(ex) && ex.weight_kg == null && !isAssistExercise(ex) && (() => {
                   const rv = calcRepVolume(ex)
                   return rv != null ? <span className="vol-ex-volume" style={{ color: 'var(--color-text-muted)' }}>맨몸 {rv}회</span> : null
                 })()}

@@ -23,27 +23,36 @@ export function isAssistExercise(exercise) {
 }
 
 /**
- * 단일 운동 행의 볼륨(kg). 중량 미설정·러닝·시간제이면 null.
+ * 단일 운동 행의 볼륨(kg). 러닝·시간제이면 null.
  * @param {object} exercise
- * @param {number|null} bodyWeight - 사용자 체중(kg). 어시스트 운동 계산에 필요.
+ * @param {number|null} bodyWeight - 사용자 체중(kg). 맨몸·어시스트 운동 계산에 필요.
  */
 export function calcExerciseVolume(exercise, bodyWeight = null) {
-  const sets   = parseInt(exercise.sets)
-  const reps   = parseAvgReps(exercise.reps_or_duration)
-  const rawW   = parseFloat(exercise.weight_kg)
-  if (!sets || !reps || isNaN(rawW)) return null
+  const sets = parseInt(exercise.sets)
+  const reps = parseAvgReps(exercise.reps_or_duration)
+  if (!sets || !reps) return null
 
-  let effectiveWeight
+  if (isCardio(exercise)) return null
+
+  const rawW = parseFloat(exercise.weight_kg)
+
   if (isAssistExercise(exercise)) {
     // 어시스트 머신: 실제 중량 = 체중 - 보조중량
-    if (!bodyWeight || bodyWeight <= rawW) return null  // 체중 미등록이거나 보조중량 >= 체중이면 계산 불가
-    effectiveWeight = bodyWeight - rawW
-  } else {
-    if (!rawW) return null
-    effectiveWeight = rawW
+    if (!bodyWeight || isNaN(rawW) || bodyWeight <= rawW) return null
+    return sets * reps * (bodyWeight - rawW)
   }
 
-  return sets * reps * effectiveWeight
+  if (!isNaN(rawW) && rawW > 0) {
+    // 일반 중량 운동
+    return sets * reps * rawW
+  }
+
+  // 맨몸 운동 (weight_kg 없음) — 체중이 등록된 경우 체중으로 계산
+  if (bodyWeight && bodyWeight > 0) {
+    return sets * reps * bodyWeight
+  }
+
+  return null
 }
 
 /**

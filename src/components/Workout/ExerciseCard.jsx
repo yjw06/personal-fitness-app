@@ -76,13 +76,13 @@ export default function ExerciseCard({ exercise, index, isCompleted, isCurrent, 
             </span>
           )}
           {volume != null && <span className="ex-volume"> · {fmtVolume(volume)}kg</span>}
-          {isAssist && exercise.weight_kg != null && volume == null && (
+          {exercise.weight_kg == null && !isCardio(exercise) && !isAssist && volume == null && (() => {
+            const rv = calcRepVolume(exercise)
+            return rv != null ? <span className="ex-bodyweight"> · 맨몸 {rv}회 (체중 미등록)</span> : null
+          })()}
+          {(isAssist && exercise.weight_kg != null && volume == null) && (
             <span className="ex-bodyweight"> · 체중 미등록</span>
           )}
-          {exercise.weight_kg == null && !isCardio(exercise) && (() => {
-            const rv = calcRepVolume(exercise)
-            return rv != null ? <span className="ex-bodyweight"> · 맨몸 {rv}회</span> : null
-          })()}
         </p>
       </div>
       {isCurrent && <div className="ex-current-dot" aria-hidden="true" />}
