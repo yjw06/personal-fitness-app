@@ -13,7 +13,7 @@ import {
 } from '../utils/volumeUtils'
 import LineChart from '../components/Chart/LineChart'
 import BarChart  from '../components/Chart/BarChart'
-import { Sparkles, TrendingUp } from 'lucide-react'
+import { Sparkles, TrendingUp, Check, RefreshCw } from 'lucide-react'
 import './VolumePage.css'
 
 const PROGRESSION_SCHEMA = {
@@ -50,6 +50,9 @@ export default function VolumePage() {
   const memory  = useMemoryStore()
   const apiKey  = memory.apiKey
 
+  const recentBody = memory.recentBody
+  const bodyWeight = recentBody?.length ? parseFloat(recentBody[recentBody.length - 1]?.weight_kg) || null : null
+
   const [history, setHistory]         = useState([])
   const [histLoading, setHistLoading] = useState(false)
   const [aiResponse, setAiResponse]   = useState('')
@@ -59,6 +62,8 @@ export default function VolumePage() {
   const [progression, setProgression]     = useState(null)
   const [progLoading, setProgLoading]     = useState(false)
   const [progError, setProgError]         = useState('')
+
+  const [aiMode, setAiMode] = useState('volume')
 
   // 14일 히스토리 조회
   const loadHistory = useCallback(async () => {
@@ -78,21 +83,21 @@ export default function VolumePage() {
 
   // ─── 오늘 볼륨 계산 ──────────────────────────────────────────
   const todayExercises = workoutData ?? []
-  const byPartToday    = aggregateVolumeByPart(todayExercises)
-  const totalToday     = totalVolume(todayExercises)
+  const byPartToday    = aggregateVolumeByPart(todayExercises, bodyWeight)
+  const totalToday     = totalVolume(todayExercises, bodyWeight)
   const hasWeightToday = totalToday > 0
 
   // ─── 14일 라인 차트 데이터 ───────────────────────────────────
   const lineData = history.map(({ date, rows }) => ({
     x: `${date.slice(4, 6)}/${date.slice(6, 8)}`,
-    y: totalVolume(rows),
+    y: totalVolume(rows, bodyWeight),
   }))
 
   // ─── 최근 7일 부위별 막대 차트 데이터 ───────────────────────
   const last7 = history.slice(-7)
   const partTotals7 = {}
   for (const { rows } of last7) {
-    const bp = aggregateVolumeByPart(rows)
+    const bp = aggregateVolumeByPart(rows, bodyWeight)
     for (const [p, v] of Object.entries(bp)) {
       partTotals7[p] = (partTotals7[p] ?? 0) + v
     }
@@ -110,7 +115,7 @@ export default function VolumePage() {
 
     const exerciseLines = todayExercises.length
       ? todayExercises.map((ex) => {
-          const vol  = calcExerciseVolume(ex)
+          const vol  = calcExerciseVolume(ex, bodyWeight)
           const wStr = ex.weight_kg != null ? `${ex.weight_kg}kg` : '중량 미설정'
           const vStr = vol != null ? ` → 볼륨 ${fmtVolume(vol)}kg` : ''
           return `- ${ex.exercise_name} (${ex.body_part}): ${ex.sets}세트 × ${ex.reps_or_duration} × ${wStr}${vStr}`
@@ -186,10 +191,26 @@ ${weeklyLines}
     // Build exercise history text from 14-day data
     const historyText = history
       .filter(({ rows }) => rows.some((r) => r.weight_kg != null))
-      .map(({ date, rows }) => {
+      .map(({ date, rows, completedReps = {} }) => {
         const exs = rows
           .filter((r) => r.weight_kg != null)
-          .map((r) => `${r.exercise_name}(${r.weight_kg}kg×${r.sets}세트×${r.reps_or_duration})`)
+          .map((r, exIdx) => {
+            const totalSets = parseInt(r.sets) || 3
+            const targetReps = parseInt(r.reps_or_duration)
+            const repsMap = completedReps[exIdx]
+            let setsStr
+            if (repsMap && Object.keys(repsMap).length > 0) {
+              setsStr = Array.from({ length: totalSets }, (_, si) => {
+                const actual = repsMap[si]
+                if (actual == null) return null
+                return Number.isFinite(targetReps) && actual >= targetReps
+                  ? `${actual}회✓`
+                  : `${actual}회`
+              }).filter(Boolean).join(', ')
+            }
+            const base = `${r.exercise_name}(${r.weight_kg}kg×${r.sets}세트×${r.reps_or_duration})`
+            return setsStr ? `${base} [실제: ${setsStr}]` : base
+          })
           .join(', ')
         return exs ? `${date}: ${exs}` : null
       })
@@ -248,7 +269,7 @@ ${historyText}
             <p className="vol-today-total">
               {fmtVolume(totalToday)}<span className="vol-today-unit"> kg</span>
             </p>
-            <p className="vol-today-sub">{todayExercises.filter((e) => calcExerciseVolume(e) != null).length}개 종목 집계</p>
+            <p className="vol-today-sub">{todayExercises.filter((e) => calcExerciseVolume(e, bodyWeight) != null).length}개 종목 집계</p>
             <div className="vol-part-chips">
               {Object.entries(byPartToday).map(([p, v]) => (
                 <span key={p} className="vol-part-chip" style={{ '--chip-color': PART_COLORS[p] ?? 'var(--color-primary)' }}>
@@ -265,7 +286,7 @@ ${historyText}
 
         <div className="vol-exercise-list">
           {todayExercises.map((ex, i) => {
-            const vol = calcExerciseVolume(ex)
+            const vol = calcExerciseVolume(ex, bodyWeight)
             return (
               <div key={i} className="vol-exercise-row">
                 <span className="vol-ex-name">{ex.exercise_name}</span>
@@ -329,71 +350,143 @@ ${historyText}
         )}
       </section>
 
-      {/* ── 섹션 4: AI 볼륨 코치 ── */}
+      {/* ── 섹션 4+5 통합: AI 코치 ── */}
       <section className="volume-section">
-        <p className="volume-section-title">AI 볼륨 코치</p>
-        <button
-          className="btn btn-primary vol-ai-btn"
-          onClick={handleAiAnalysis}
-          disabled={aiLoading}
-        >
-          {aiLoading
-            ? <><span className="spinner" style={{ width: 14, height: 14 }} /> 분석 중...</>
-            : <><Sparkles size={14} /> AI에게 볼륨 분석 요청</>}
-        </button>
-        {aiError && <p className="vol-ai-error">{aiError}</p>}
-        {aiResponse && (
-          <div className="vol-ai-response">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiResponse}</ReactMarkdown>
-          </div>
-        )}
-      </section>
+        <div className="aic-panel">
 
-      {/* ── 섹션 5: 진행성 과부하 계획 ── */}
-      <section className="volume-section">
-        <p className="volume-section-title">진행성 과부하 계획</p>
-        <button
-          className="btn btn-ghost vol-prog-btn"
-          onClick={handleProgressionPlan}
-          disabled={progLoading}
-        >
-          {progLoading
-            ? <><span className="spinner" style={{ width: 14, height: 14 }} /> 분석 중...</>
-            : <><TrendingUp size={14} /> 다음 목표 중량 계산</>}
-        </button>
-        {progError && <p className="vol-ai-error">{progError}</p>}
-        {progression && progression.length > 0 && (
-          <>
-            <div className="vol-prog-list">
-              {progression.map((r) => (
-                <div key={r.exercise_name} className={`vol-prog-card vol-prog-${r.status}`}>
-                  <div className="vol-prog-header">
-                    <span className="vol-prog-name">{r.exercise_name}</span>
-                    <span className="vol-prog-badge">
-                      {r.status === 'increase' ? '↑ 증량' : r.status === 'decrease' ? '↓ 감량' : r.status === 'new' ? '신규' : '유지'}
-                    </span>
-                  </div>
-                  <div className="vol-prog-kg">
-                    {r.current_kg}kg → <strong>{r.target_kg}kg</strong>
-                  </div>
-                  <p className="vol-prog-reason">{r.reason}</p>
-                </div>
-              ))}
+          {/* 헤더 */}
+          <div className="aic-header">
+            <div className="aic-header-icon">
+              <Sparkles size={18} />
             </div>
+            <div>
+              <p className="aic-title">AI 코치</p>
+              <p className="aic-subtitle">원하는 분석 모드를 선택하세요</p>
+            </div>
+          </div>
+
+          {/* 모드 카드 */}
+          <div className="aic-mode-grid">
             <button
-              className="btn btn-primary vol-prog-apply-btn"
-              onClick={() => {
-                memory.applyProgressTargets(user.uid, progression)
-                setProgression(null)
-              }}
+              className={`aic-mode-card ${aiMode === 'volume' ? 'active' : ''}`}
+              onClick={() => setAiMode('volume')}
             >
-              목표 중량 저장
+              <div className="aic-mode-icon"><Sparkles size={20} /></div>
+              <p className="aic-mode-name">볼륨 분석</p>
+              <p className="aic-mode-desc">오늘 운동 · 부위별 평가 · 추천</p>
+              <span className="aic-mode-check"><Check size={11} strokeWidth={3} /></span>
             </button>
-          </>
-        )}
-        {progression && progression.length === 0 && (
-          <p className="vol-no-weight-hint">중량이 기록된 운동이 없어 계획을 수립할 수 없어요.</p>
-        )}
+            <button
+              className={`aic-mode-card ${aiMode === 'overload' ? 'active' : ''}`}
+              onClick={() => setAiMode('overload')}
+            >
+              <div className="aic-mode-icon"><TrendingUp size={20} /></div>
+              <p className="aic-mode-name">과부하 계획</p>
+              <p className="aic-mode-desc">14일 기록 · 목표 중량 계산</p>
+              <span className="aic-mode-check"><Check size={11} strokeWidth={3} /></span>
+            </button>
+          </div>
+
+          {/* 컨텍스트 */}
+          <div className="aic-context">
+            <span className="aic-ctx-dot" />
+            {aiMode === 'volume'
+              ? todayExercises.length > 0
+                ? `오늘 ${todayExercises.length}종목${hasWeightToday ? ` · 총 ${fmtVolume(totalToday)}kg` : ' · 중량 미설정'}`
+                : '오늘 운동 기록 없음'
+              : history.length > 0
+                ? `${history.length}일 기록 분석 가능`
+                : '운동 기록 없음 — 먼저 운동을 기록해 주세요'
+            }
+          </div>
+
+          {/* 실행 버튼 */}
+          <button
+            className="btn btn-primary aic-run-btn"
+            onClick={aiMode === 'volume' ? handleAiAnalysis : handleProgressionPlan}
+            disabled={aiLoading || progLoading}
+          >
+            {(aiMode === 'volume' && aiLoading) || (aiMode === 'overload' && progLoading) ? (
+              <><span className="spinner" style={{ width: 15, height: 15 }} /> 분석 중...</>
+            ) : aiMode === 'volume' ? (
+              <><Sparkles size={15} /> 볼륨 분석 시작하기</>
+            ) : (
+              <><TrendingUp size={15} /> 목표 중량 계산하기</>
+            )}
+          </button>
+
+          {/* 에러 */}
+          {aiMode === 'volume' && aiError && (
+            <p className="vol-ai-error">{aiError}</p>
+          )}
+          {aiMode === 'overload' && progError && (
+            <p className="vol-ai-error">{progError}</p>
+          )}
+
+          {/* 볼륨 분석 결과 */}
+          {aiMode === 'volume' && aiResponse && (
+            <div className="aic-result animate-fadeInUp">
+              <div className="aic-result-header">
+                <span className="aic-result-label">
+                  <Sparkles size={12} /> 볼륨 분석 결과
+                </span>
+                <button className="btn btn-ghost aic-result-rerun" onClick={handleAiAnalysis} disabled={aiLoading}>
+                  <RefreshCw size={12} /> 다시 분석
+                </button>
+              </div>
+              <div className="aic-result-body vol-ai-response">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiResponse}</ReactMarkdown>
+              </div>
+            </div>
+          )}
+
+          {/* 과부하 계획 결과 */}
+          {aiMode === 'overload' && progression && progression.length > 0 && (
+            <div className="aic-result animate-fadeInUp">
+              <div className="aic-result-header">
+                <span className="aic-result-label">
+                  <TrendingUp size={12} /> 과부하 계획
+                </span>
+                <button className="btn btn-ghost aic-result-rerun" onClick={handleProgressionPlan} disabled={progLoading}>
+                  <RefreshCw size={12} /> 다시 계산
+                </button>
+              </div>
+              <div className="aic-prog-list">
+                {progression.map((r) => (
+                  <div key={r.exercise_name} className="aic-prog-card" data-status={r.status}>
+                    <div className="aic-prog-top">
+                      <span className="aic-prog-name">{r.exercise_name}</span>
+                      <span className={`aic-prog-badge aic-prog-badge--${r.status}`}>
+                        {r.status === 'increase' ? '↑ 증량' : r.status === 'decrease' ? '↓ 감량' : r.status === 'new' ? '신규' : '= 유지'}
+                      </span>
+                    </div>
+                    <div className="aic-prog-weight">
+                      <span className="aic-prog-curr">{r.current_kg}kg</span>
+                      <span className="aic-prog-arrow">→</span>
+                      <span className="aic-prog-target">{r.target_kg}kg</span>
+                    </div>
+                    <p className="aic-prog-reason">{r.reason}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="aic-result-footer">
+                <button
+                  className="btn btn-primary btn-full"
+                  onClick={() => {
+                    memory.applyProgressTargets(user.uid, progression)
+                    setProgression(null)
+                  }}
+                >
+                  <Check size={15} /> 목표 중량 저장
+                </button>
+              </div>
+            </div>
+          )}
+          {aiMode === 'overload' && progression && progression.length === 0 && (
+            <p className="vol-no-weight-hint">중량이 기록된 운동이 없어 계획을 수립할 수 없어요.</p>
+          )}
+
+        </div>
       </section>
 
     </main>

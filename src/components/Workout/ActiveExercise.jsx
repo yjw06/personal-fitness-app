@@ -19,7 +19,6 @@ export default function ActiveExercise() {
   const totalSets    = parseInt(exercise.sets) || 3
   const doneSetCount = completedSets[currentIndex] || 0
   const color        = PART_COLORS[exercise.body_part] ?? 'var(--color-primary)'
-  const progress     = Math.round((doneSetCount / totalSets) * 100)
 
   return (
     <div className="active-exercise animate-fadeInUp" style={{ '--part-color': color }}>

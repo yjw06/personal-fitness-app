@@ -2,8 +2,86 @@
 
 .workout-toolbar {
   display: flex;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Row 1: 메인 액션 */
+.wt-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wt-main > * {
+  justify-content: center;
+  height: 38px;
+}
+
+.wt-main > *:nth-child(1) { flex: 4; } /* 운동 추가 */
+.wt-main > *:nth-child(2) { flex: 3; } /* CSV */
+.wt-main > *:nth-child(3) { flex: 1; } /* 🔄 */
+.wt-main > *:nth-child(4) { flex: 2; } /* 선택 */
+
+/* 아이콘 버튼 공통 */
+.wt-icon-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+}
+
+.wt-btn-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* 선택 모드 활성화된 선택 버튼 */
+.wt-sel-active {
+  background: var(--color-primary-dim);
+  border: 1px solid var(--color-primary-mid);
+  color: var(--color-primary);
+}
+
+/* Row 2: 선택 모드 액션 바 */
+.wt-sel-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-primary-mid);
+  border-radius: var(--radius-md);
+}
+
+.wt-sel-btn {
+  font-size: 0.75rem;
+  padding: 6px 10px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.wt-sel-btn-active {
+  background: var(--color-primary-dim);
+  border: 1px solid var(--color-primary-mid) !important;
+  color: var(--color-primary);
+}
+
+.wt-sel-count {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--color-text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.wt-sel-count strong {
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 .upload-label { cursor: pointer; }
@@ -12,23 +90,45 @@
 .exercise-select-wrap {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: 4px;
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
+  gap: 12px;
+  padding: 8px 8px 8px 12px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid transparent;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.exercise-select-wrap:hover {
-  border-color: var(--color-primary-mid);
+.exercise-select-wrap:active {
+  background: rgba(255,255,255,0.04);
 }
 .exercise-select-wrap.selected {
   border-color: var(--color-primary);
   background: var(--color-primary-dim);
 }
+
+/* 체크박스 */
+.sel-checkbox {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sel-checkbox.checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
 .exercise-select-card {
   flex: 1;
-  pointer-events: none;  /* 카드 자체 클릭은 막고 wrapper의 toggle만 */
+  min-width: 0;
+  pointer-events: none;
 }
 
 .workout-summary {

@@ -29,6 +29,8 @@ export const useWorkoutStore = create((set, get) => ({
   currentIndex:    0,
   currentSet:      1,
   completedSets:   {},
+  completedReps:   {},
+  pendingPhase:    null,
   restSecondsLeft: 0,
   restEndTime:     null,
 
@@ -48,10 +50,10 @@ export const useWorkoutStore = create((set, get) => ({
   setError:        (e)    => set({ error: e }),
   setUid:          (uid)  => set({ uid }),
 
-  _persistProgress: (newCompleted) => {
+  _persistProgress: (newCompleted, newReps) => {
     const { uid, selectedDate } = get()
     if (uid && selectedDate) {
-      saveWorkoutProgress(uid, selectedDate, newCompleted).catch(() => {})
+      saveWorkoutProgress(uid, selectedDate, newCompleted, newReps).catch(() => {})
     }
   },
 
@@ -70,7 +72,7 @@ export const useWorkoutStore = create((set, get) => ({
   },
 
   completeSet: () => {
-    const { currentIndex, currentSet, workoutData, completedSets } = get()
+    const { currentIndex, currentSet, workoutData, completedSets, completedReps } = get()
     const exercise = workoutData?.[currentIndex]
     const totalSets = parseInt(exercise?.sets) || 3
     const restSec   = parseInt(exercise?.rest_seconds) || 60
@@ -89,7 +91,8 @@ export const useWorkoutStore = create((set, get) => ({
 
       set({
         completedSets: newCompleted,
-        phase:         hasRemaining ? 'pick_next' : 'overview',
+        phase:         'log_reps',
+        pendingPhase:  hasRemaining ? 'pick_next' : 'overview',
       })
     } else {
       set({
@@ -101,7 +104,21 @@ export const useWorkoutStore = create((set, get) => ({
       })
     }
 
-    get()._persistProgress(newCompleted)
+    get()._persistProgress(newCompleted, completedReps)
+  },
+
+  saveExerciseReps: (repsArray) => {
+    const { currentIndex, completedSets, completedReps, pendingPhase } = get()
+    const repsMap = {}
+    repsArray.forEach((r, i) => { if (r != null) repsMap[i] = r })
+    const newReps = { ...completedReps, [currentIndex]: repsMap }
+    set({ completedReps: newReps, phase: pendingPhase, pendingPhase: null })
+    get()._persistProgress(completedSets, newReps)
+  },
+
+  skipExerciseReps: () => {
+    const { pendingPhase } = get()
+    set({ phase: pendingPhase, pendingPhase: null })
   },
 
   afterRest: () => set({ phase: 'active', restEndTime: null }),
@@ -124,8 +141,8 @@ export const useWorkoutStore = create((set, get) => ({
   resetWorkout: () => set({ phase: 'overview', currentIndex: 0, currentSet: 1 }),
 
   clearAll: () => {
-    set({ phase: 'overview', currentIndex: 0, currentSet: 1, completedSets: {} })
-    get()._persistProgress({})
+    set({ phase: 'overview', currentIndex: 0, currentSet: 1, completedSets: {}, completedReps: {} })
+    get()._persistProgress({}, {})
   },
 
   isExerciseDone: (index) => {

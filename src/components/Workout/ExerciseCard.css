@@ -1,3 +1,75 @@
+/* ── 스와이프 래퍼 ── */
+.ex-swipe-wrap {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  touch-action: pan-y;
+}
+
+.ex-swipe-track {
+  display: flex;
+  width: calc(100% + 116px); /* card + REVEAL_W */
+  will-change: transform;
+}
+
+.ex-card-part {
+  flex: 0 0 calc(100% - 116px);
+  min-width: 0;
+  border-radius: 0 !important; /* parent clips */
+}
+
+.ex-swipe-panel {
+  flex: 0 0 116px;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface-3);
+}
+
+.ex-sp-btn {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.375rem;
+  font-weight: 400;
+  color: var(--color-text-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s, color 0.1s;
+  padding: 16px 0;
+}
+
+.ex-sp-btn:active {
+  background: rgba(255,255,255,0.08);
+  color: var(--color-primary);
+}
+
+.ex-sp-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.ex-sp-val {
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.ex-sp-unit {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+  line-height: 1;
+}
+
+/* ── 카드 본체 ── */
 .exercise-card {
   display: flex;
   align-items: center;

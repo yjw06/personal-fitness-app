@@ -364,7 +364,8 @@ export default function CoachPage() {
         } else if (command.mode === 'json-multi') {
           await runJsonMulti(command.kinds, notes)
         } else if (command.mode === 'chat') {
-          await runChat(text, command.prompt, notes)
+          const cmdPrompt = typeof command.prompt === 'function' ? command.prompt() : command.prompt
+          await runChat(text, cmdPrompt, notes)
         }
         // 한 번 사용한 textarea 값은 비움
         if (presetExtras) setExtraNotes('')
@@ -434,8 +435,14 @@ export default function CoachPage() {
     const v = e.target.value
     setInput(v)
     if (v.startsWith('/')) {
-      setCmdMenuOpen(true)
-      setCmdMenuIdx(0)
+      const p = parseCommand(v)
+      // 명령어 정확히 매칭 + extras 입력 중이면 드롭다운 닫기
+      if (p.command && p.extras) {
+        setCmdMenuOpen(false)
+      } else {
+        setCmdMenuOpen(true)
+        setCmdMenuIdx(0)
+      }
     } else {
       setCmdMenuOpen(false)
     }
@@ -561,10 +568,10 @@ export default function CoachPage() {
             </p>
             <button
               className="coach-suggestion-btn"
-              onClick={() => handleSend('오늘 컨디션 어때? 짧게 물어봐', extraNotes)}
+              onClick={() => handleSend('오늘 내 운동 계획 짧게 요약해줘', extraNotes)}
               disabled={isLoading || !apiKey}
             >
-              오늘 컨디션 어때?
+              오늘 운동 계획 요약
             </button>
           </div>
         )}
@@ -611,16 +618,24 @@ export default function CoachPage() {
           </div>
         )}
 
-        <input
-          ref={inputRef}
-          className="coach-input"
-          type="text"
-          placeholder="AI 코치에게 물어보기 또는 / 입력..."
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          disabled={isLoading || !apiKey}
-        />
+        <div className="coach-input-wrap">
+          {parsed.command && parsed.extras && (
+            <div className="coach-extras-pill">
+              <span className="coach-extras-label">📝 특이사항</span>
+              <span className="coach-extras-text">{parsed.extras}</span>
+            </div>
+          )}
+          <input
+            ref={inputRef}
+            className="coach-input"
+            type="text"
+            placeholder="AI 코치에게 물어보기 또는 / 입력..."
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            disabled={isLoading || !apiKey}
+          />
+        </div>
         <button
           className="btn btn-primary coach-send-btn"
           onClick={() => handleSend()}

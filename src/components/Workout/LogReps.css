@@ -1,0 +1,241 @@
+.log-reps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+
+/* ── 완료 세레모니 헤더 ── */
+.lr-hero {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1.5px solid var(--color-primary-mid);
+  background: var(--color-primary-dim);
+}
+
+.lr-hero-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 0%,
+    rgba(200, 255, 0, 0.18) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.lr-hero-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 20px 20px;
+  text-align: center;
+}
+
+.lr-hero-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+  background: rgba(200, 255, 0, 0.15);
+  border: 1px solid rgba(200, 255, 0, 0.3);
+  border-radius: var(--radius-full);
+  padding: 3px 12px;
+}
+
+.lr-hero-name {
+  font-size: 1.875rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--color-text-1);
+  margin: 0;
+}
+
+.lr-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  margin: 0;
+}
+
+.lr-hero-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+/* ── 스코어카드 ── */
+.lr-scorecard {
+  background: var(--color-surface-2);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.lr-scorecard-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-3);
+  padding: 14px 16px 10px;
+  margin: 0;
+}
+
+.lr-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  transition: background 0.18s;
+}
+
+.lr-row.hit  { background: rgba(200, 255, 0, 0.06); }
+.lr-row.miss { background: transparent; }
+
+.lr-row-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--color-text-3);
+  min-width: 40px;
+}
+
+.lr-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+  margin: 0 16px;
+}
+
+/* ── 스텝퍼 ── */
+.lr-stepper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.lr-step {
+  width: 42px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  color: var(--color-text-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+
+.lr-step:active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-1);
+}
+
+.lr-num {
+  flex: 1;
+  text-align: center;
+  font-size: 1.625rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-1);
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  height: 48px;
+  min-width: 0;
+  -moz-appearance: textfield;
+}
+
+.lr-num::-webkit-inner-spin-button,
+.lr-num::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+.lr-row.hit .lr-num { color: var(--color-primary); }
+
+/* ── 상태 뱃지 ── */
+.lr-badge {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  min-width: 48px;
+  text-align: right;
+  letter-spacing: -0.02em;
+}
+
+.lr-badge.hit   { color: var(--color-primary); }
+.lr-badge.miss  { color: var(--color-text-3); }
+.lr-badge.empty { color: transparent; }
+
+/* ── 요약 통계 ── */
+.lr-stats {
+  display: flex;
+  align-items: center;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.lr-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 14px 8px;
+}
+
+.lr-stat-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-1);
+  line-height: 1;
+}
+
+.lr-stat-total,
+.lr-stat-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+}
+
+.lr-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-3);
+}
+
+.lr-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+/* ── 액션 ── */
+.lr-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+.lr-skip { flex: 0 0 auto; }
+.lr-save { flex: 1; font-weight: 700; }

@@ -1,0 +1,190 @@
+.wel-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── 헤더 ── */
+.wel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--color-surface-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.wel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wel-title {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: var(--color-text-1);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* 스텝 토글 */
+.wel-step-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+}
+
+.wel-step-btn {
+  padding: 4px 10px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-3);
+  background: transparent;
+  border: none;
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+
+.wel-step-btn.active {
+  background: var(--color-primary);
+  color: #000;
+}
+
+.wel-step-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+  padding-right: 4px;
+}
+
+.wel-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.wel-close:hover { background: rgba(255,255,255,0.1); color: var(--color-text-1); }
+
+/* ── 운동 목록 ── */
+.wel-list {
+  background: var(--color-surface-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+
+.wel-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.12s;
+}
+
+.wel-row:last-child { border-bottom: none; }
+.wel-row:active { background: rgba(255,255,255,0.03); }
+
+.wel-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wel-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.wel-badge {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.02em;
+}
+
+/* ── 스텝퍼 ── */
+.wel-stepper {
+  display: flex;
+  align-items: center;
+  background: var(--color-surface-3);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.wel-step-action {
+  width: 44px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--color-text-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s, color 0.1s;
+}
+
+.wel-step-action:active {
+  background: rgba(255,255,255,0.08);
+  color: var(--color-primary);
+}
+
+.wel-weight {
+  min-width: 64px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+}
+
+.wel-weight-unit {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-3);
+  margin-left: 1px;
+}
+
+.wel-empty {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-3);
+  padding: 24px 16px;
+  margin: 0;
+}
+
+/* ── 저장 버튼 ── */
+.wel-save {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}

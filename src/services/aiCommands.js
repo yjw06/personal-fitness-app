@@ -3,8 +3,11 @@
 // mode:
 //   'json'       - 단일 작업. JSON Schema로 호출 후 자동 저장 (kind 필드 사용)
 //   'json-multi' - 여러 작업 순차. (kinds 배열)
-//   'chat'       - 자유 대화. prompt를 그대로 AI에 전달
+//   'chat'       - 자유 대화. prompt를 그대로 AI에 전달 (함수도 허용)
 //   'client'     - 클라이언트에서 직접 처리 (AI 호출 X, 예: /도움)
+
+const DAY_KO = ['일', '월', '화', '수', '목', '금', '토']
+const todayDayKo = () => DAY_KO[new Date().getDay()]
 
 export const COMMANDS = [
   {
@@ -50,7 +53,7 @@ export const COMMANDS = [
     label: '/분석',
     description: '최근 운동·체성분 패턴을 보고 조언',
     mode: 'chat',
-    prompt: '최근 14일 운동 기록과 체성분 추세를 보고 분석해줘. 부위별 빈도·미완료·강도 변화·체중 변화를 정리하고, 다음 주에 보완할 점을 짧게 제안해줘.',
+    prompt: () => `오늘(${todayDayKo()}요일) 기준으로 최근 14일 운동 기록과 체성분 추세를 분석해줘. 부위별 빈도·미완료·강도 변화·체중 변화를 정리하고, 다음 주에 보완할 점을 짧게 제안해줘.`,
   },
   {
     id: '컨디션',
@@ -59,7 +62,7 @@ export const COMMANDS = [
     label: '/컨디션',
     description: '오늘 컨디션 묻고 조정 조언',
     mode: 'chat',
-    prompt: '오늘 내 컨디션이 어떤지 먼저 짧게 물어봐. 답변에 따라 운동·식단·스케줄 조정안을 제안해줘. 부상이나 피로 같은 정보는 save_to_memory로 저장.',
+    prompt: () => `오늘(${todayDayKo()}요일) 컨디션이 어떤지 먼저 짧게 물어봐. 답변에 따라 ${todayDayKo()}요일 운동·식단·스케줄 조정안을 제안해줘. 부상이나 피로 같은 정보는 save_to_memory로 저장.`,
   },
   {
     id: '메모',

@@ -19,6 +19,7 @@ import './index.css'
 export default function App() {
   const { user, loading } = useAuth()
   const resetMemory   = useMemoryStore((s) => s.reset)
+  const loadMemory    = useMemoryStore((s) => s.load)
   const loadAIForUser = useAIStore((s) => s.loadForUser)
 
   // 사용자 전환 시 메모리/채팅 격리
@@ -27,9 +28,10 @@ export default function App() {
       resetMemory()
       loadAIForUser(null)
     } else {
+      loadMemory(user.uid)
       loadAIForUser(user.uid)
     }
-  }, [user, resetMemory, loadAIForUser])
+  }, [user, resetMemory, loadMemory, loadAIForUser])
 
   if (loading) {
     return (

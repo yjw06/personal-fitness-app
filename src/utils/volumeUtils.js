@@ -14,24 +14,48 @@ export function parseAvgReps(str) {
 }
 
 /**
- * 단일 운동 행의 볼륨(kg). 중량 미설정·러닝·시간제이면 null.
+ * 어시스트 머신 여부 — 이름에 "어시스트" 또는 "assist" 포함
+ * 실제 사용 중량 = 체중 - 어시스트중량
  */
-export function calcExerciseVolume(exercise) {
+export function isAssistExercise(exercise) {
+  const name = (exercise?.exercise_name ?? '').toLowerCase()
+  return name.includes('어시스트') || name.includes('assist')
+}
+
+/**
+ * 단일 운동 행의 볼륨(kg). 중량 미설정·러닝·시간제이면 null.
+ * @param {object} exercise
+ * @param {number|null} bodyWeight - 사용자 체중(kg). 어시스트 운동 계산에 필요.
+ */
+export function calcExerciseVolume(exercise, bodyWeight = null) {
   const sets   = parseInt(exercise.sets)
   const reps   = parseAvgReps(exercise.reps_or_duration)
-  const weight = parseFloat(exercise.weight_kg)
-  if (!sets || !reps || !weight || isNaN(weight)) return null
-  return sets * reps * weight
+  const rawW   = parseFloat(exercise.weight_kg)
+  if (!sets || !reps || isNaN(rawW)) return null
+
+  let effectiveWeight
+  if (isAssistExercise(exercise)) {
+    // 어시스트 머신: 실제 중량 = 체중 - 보조중량
+    if (!bodyWeight || bodyWeight <= rawW) return null  // 체중 미등록이거나 보조중량 >= 체중이면 계산 불가
+    effectiveWeight = bodyWeight - rawW
+  } else {
+    if (!rawW) return null
+    effectiveWeight = rawW
+  }
+
+  return sets * reps * effectiveWeight
 }
 
 /**
  * 부위별 볼륨 합산
+ * @param {object[]} exercises
+ * @param {number|null} bodyWeight - 사용자 체중(kg)
  * @returns {{ [bodyPart: string]: number }}
  */
-export function aggregateVolumeByPart(exercises) {
+export function aggregateVolumeByPart(exercises, bodyWeight = null) {
   const result = {}
   for (const ex of (exercises ?? [])) {
-    const vol = calcExerciseVolume(ex)
+    const vol = calcExerciseVolume(ex, bodyWeight)
     if (vol == null) continue
     result[ex.body_part] = (result[ex.body_part] ?? 0) + vol
   }
@@ -39,8 +63,8 @@ export function aggregateVolumeByPart(exercises) {
 }
 
 /** 전체 총 볼륨(kg) */
-export function totalVolume(exercises) {
-  return Object.values(aggregateVolumeByPart(exercises)).reduce((s, v) => s + v, 0)
+export function totalVolume(exercises, bodyWeight = null) {
+  return Object.values(aggregateVolumeByPart(exercises, bodyWeight)).reduce((s, v) => s + v, 0)
 }
 
 /** "1,980" 형식 포맷 (소수점 없음) */

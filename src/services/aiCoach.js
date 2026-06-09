@@ -63,8 +63,9 @@ export function buildChatSystemInstruction(memory = {}, autoSummary = {}) {
 # Output Language
 Respond in natural Korean (자연스러운 존댓말). No "다나까" style.
 
-# Today
-${dateStr} — YYYYMMDD: ${ymd} (${dayName}요일)
+# Today — 오늘은 ${dayName}요일입니다
+${dateStr} (${dayName}요일) — YYYYMMDD: ${ymd}
+When discussing plans, workouts, or schedules, always base them on ${dayName}요일 unless the user specifies otherwise.
 
 # How to help
 - Free conversation: answer the user's questions about training, nutrition, recovery, motivation, etc.

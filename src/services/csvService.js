@@ -49,7 +49,11 @@ export async function fetchWorkout(uid, date) {
     const snap = await getDoc(workoutDoc(uid, date))
     if (!snap.exists()) return null
     const data = snap.data()
-    return { rows: data.rows, completedSets: data.completedSets || {} }
+    return {
+      rows: data.rows,
+      completedSets: data.completedSets || {},
+      completedReps: data.completedReps || {},
+    }
   } catch (err) {
     console.error('[fetchWorkout]', err)
     throw err
@@ -124,10 +128,11 @@ export async function saveWorkoutData(uid, date, rows) {
   await setDoc(workoutDoc(uid, date), { rows, updatedAt: new Date().toISOString() })
 }
 
-export async function saveWorkoutProgress(uid, date, completedSets) {
+export async function saveWorkoutProgress(uid, date, completedSets, completedReps) {
   try {
     await setDoc(workoutDoc(uid, date), {
       completedSets,
+      ...(completedReps != null && { completedReps }),
       updatedAt: new Date().toISOString(),
     }, { merge: true })
   } catch (err) {
@@ -243,6 +248,8 @@ export async function fetchVolumeHistory(uid, days = 14) {
   return dates.map((date, i) => ({
     date,
     rows: snaps[i]?.rows ?? [],
+    completedSets: snaps[i]?.completedSets ?? {},
+    completedReps: snaps[i]?.completedReps ?? {},
   }))
 }
 

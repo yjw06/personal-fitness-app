@@ -8,15 +8,18 @@ import { useWorkoutStore } from '../stores/workoutStore'
 import { toast } from '../stores/toastStore'
 import { unlockAudio } from '../services/restAlert'
 import { useSelection } from '../hooks/useSelection'
-import SelectionToolbar from '../components/Selection/SelectionToolbar'
 import EntryModal from '../components/EntryModal/EntryModal'
 import ExerciseForm from '../components/EntryModal/ExerciseForm'
 import ExerciseCard from '../components/Workout/ExerciseCard'
 import ActiveExercise from '../components/Workout/ActiveExercise'
 import RestTimer from '../components/Workout/RestTimer'
-import { Upload, RefreshCw, Play, Check, Plus, Pencil } from 'lucide-react'
-import '../components/Selection/SelectionToolbar.css'
+import LogReps from '../components/Workout/LogReps'
+import WeightEditList from '../components/Workout/WeightEditList'
+import { isCardio } from '../utils/volumeUtils'
+import { useMemoryStore } from '../stores/memoryStore'
+import { Upload, RefreshCw, Play, Check, Plus, Pencil, SlidersHorizontal, CheckSquare, Square, Trash2 } from 'lucide-react'
 import './WorkoutPage.css'
+
 
 export default function WorkoutPage() {
   const { user } = useAuth()
@@ -30,6 +33,9 @@ export default function WorkoutPage() {
     setUid,
   } = useWorkoutStore()
 
+  const recentBody = useMemoryStore((s) => s.recentBody)
+  const bodyWeight = recentBody?.length ? parseFloat(recentBody[recentBody.length - 1]?.weight_kg) || null : null
+
   const load = useCallback(async () => {
     if (!user) return
     setLoading(true)
@@ -39,14 +45,13 @@ export default function WorkoutPage() {
       const result = await fetchWorkout(user.uid, selectedDate)
       if (result) {
         setWorkoutData(result.rows ?? [])
-        if (result.completedSets && Object.keys(result.completedSets).length > 0) {
-          useWorkoutStore.setState({ completedSets: result.completedSets })
-        } else {
-          useWorkoutStore.setState({ completedSets: {} })
-        }
+        useWorkoutStore.setState({
+          completedSets: result.completedSets && Object.keys(result.completedSets).length > 0 ? result.completedSets : {},
+          completedReps: result.completedReps || {},
+        })
       } else {
         setWorkoutData([])
-        useWorkoutStore.setState({ completedSets: {} })
+        useWorkoutStore.setState({ completedSets: {}, completedReps: {} })
       }
     } catch (err) {
       setError('운동 데이터를 불러오지 못했습니다.')
@@ -64,6 +69,50 @@ export default function WorkoutPage() {
     [workoutData],
   )
   const selection = useSelection(allIndices)
+
+  // 선택된 운동 중량 편집 모드
+  const [weightEditMode, setWeightEditMode] = useState(false)
+
+  // 선택된 비-카디오 운동 엔트리 [{index, exercise}]
+  const selectedEntries = (!selection.enabled || !workoutData)
+    ? []
+    : Array.from(selection.selected)
+        .filter(i => workoutData[i] && !isCardio(workoutData[i]))
+        .sort((a, b) => a - b)
+        .map(i => ({ index: i, exercise: workoutData[i] }))
+
+  const handleQuickWeightStep = async (index, delta) => {
+    if (!workoutData) return
+    const ex = workoutData[index]
+    if (isCardio(ex)) return
+    const curr = ex.weight_kg ?? 0
+    const next = Math.max(0, parseFloat((curr + delta).toFixed(1)))
+    const newRows = workoutData.map((r, i) => i === index ? { ...r, weight_kg: next } : r)
+    setWorkoutData(newRows)
+    try {
+      await saveWorkoutData(user.uid, selectedDate, newRows)
+    } catch {
+      toast.error('저장 실패')
+      setWorkoutData(workoutData)
+    }
+  }
+
+  const handleSaveSelectedWeights = async (weightEntries) => {
+    // weightEntries: [{index, weight}]
+    const newRows = workoutData.map((ex, i) => {
+      const entry = weightEntries.find(e => e.index === i)
+      return (entry && entry.weight != null) ? { ...ex, weight_kg: entry.weight } : ex
+    })
+    try {
+      await saveWorkoutData(user.uid, selectedDate, newRows)
+      setWorkoutData(newRows)
+      toast.success('중량 저장 완료')
+    } catch {
+      toast.error('저장 실패')
+    }
+    setWeightEditMode(false)
+    selection.disable()
+  }
 
   // 추가/편집 모달
   const [modalOpen, setModalOpen] = useState(false)
@@ -173,6 +222,12 @@ export default function WorkoutPage() {
     </main>
   )
 
+  if (phase === 'log_reps') return (
+    <main className="page-content workout-page" role="main">
+      <LogReps />
+    </main>
+  )
+
   // ─── phase: pick_next (개선: 첫번째 운동 = 추천) ──
   if (phase === 'pick_next') {
     const remaining = workoutData
@@ -199,6 +254,7 @@ export default function WorkoutPage() {
                   isCompleted={false}
                   isCurrent={true}
                   onClick={() => pickExercise(remaining[0].i)}
+                  bodyWeight={bodyWeight}
                 />
               </div>
 
@@ -213,6 +269,7 @@ export default function WorkoutPage() {
                       isCompleted={false}
                       isCurrent={false}
                       onClick={() => pickExercise(i)}
+                      bodyWeight={bodyWeight}
                     />
                   ))}
                 </>
@@ -241,35 +298,62 @@ export default function WorkoutPage() {
   return (
     <main className="page-content workout-page" role="main">
       <div className="workout-toolbar">
-        <button className="btn btn-primary" onClick={openAdd}>
-          <Plus size={16} /> 운동 추가
-        </button>
-        <label id="btn-upload-workout" className="btn btn-ghost upload-label" role="button">
-          <Upload size={16} /> CSV
-          <input type="file" accept=".csv" onChange={handleUpload} hidden />
-        </label>
-        <button id="btn-refresh-workout" className="btn btn-ghost" onClick={load} disabled={loading} aria-label="새로고침">
-          <RefreshCw size={16} className={loading ? 'spin-anim' : ''} />
-        </button>
-        {workoutData?.length > 0 && (
-          <>
-            <SelectionToolbar
-              enabled={selection.enabled}
-              totalCount={allIndices.length}
-              selectedCount={selection.size}
-              allSelected={selection.isAllSelected}
-              onEnable={selection.enable}
-              onCancel={selection.disable}
-              onToggleAll={() => selection.toggleAll()}
-              onDelete={handleDeleteSelected}
-              confirmText={`선택한 운동 ${selection.size}개를 삭제할까요?`}
-            />
-            {selection.enabled && singleSelectedIdx != null && (
-              <button className="btn btn-ghost" onClick={() => openEdit(singleSelectedIdx)}>
+        {/* Row 1: 항상 표시 */}
+        <div className="wt-main">
+          <button className="btn btn-primary" onClick={openAdd}>
+            <Plus size={16} /> 운동 추가
+          </button>
+          <label id="btn-upload-workout" className="btn btn-ghost upload-label wt-icon-btn" role="button" aria-label="CSV 업로드">
+            <Upload size={16} />
+            <span className="wt-btn-label">CSV</span>
+            <input type="file" accept=".csv" onChange={handleUpload} hidden />
+          </label>
+          <button id="btn-refresh-workout" className="btn btn-ghost wt-icon-btn" onClick={load} disabled={loading} aria-label="새로고침">
+            <RefreshCw size={16} className={loading ? 'spin-anim' : ''} />
+          </button>
+          {workoutData?.length > 0 && (
+            <button
+              className={`btn wt-icon-btn ${selection.enabled ? 'wt-sel-active' : 'btn-ghost'}`}
+              onClick={selection.enabled ? selection.disable : selection.enable}
+              aria-label={selection.enabled ? '선택 취소' : '선택'}
+            >
+              <CheckSquare size={16} />
+              <span className="wt-btn-label">{selection.enabled ? '취소' : '선택'}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Row 2: 선택 모드일 때만 */}
+        {selection.enabled && !weightEditMode && (
+          <div className="wt-sel-row animate-fadeInUp">
+            {selectedEntries.length > 0 && (
+              <button className="btn btn-ghost wt-sel-btn" onClick={() => setWeightEditMode(true)}>
+                <SlidersHorizontal size={14} /> 중량
+              </button>
+            )}
+            <button
+              className={`btn wt-sel-btn ${selection.isAllSelected ? 'wt-sel-btn-active' : 'btn-ghost'}`}
+              onClick={() => selection.toggleAll()}
+            >
+              {selection.isAllSelected ? <CheckSquare size={14} /> : <Square size={14} />}
+              전체
+            </button>
+            <span className="wt-sel-count">
+              <strong>{selection.size}</strong> / {workoutData.length}
+            </span>
+            {singleSelectedIdx != null && (
+              <button className="btn btn-ghost wt-sel-btn" onClick={() => openEdit(singleSelectedIdx)}>
                 <Pencil size={14} /> 편집
               </button>
             )}
-          </>
+            <button
+              className="btn btn-danger wt-sel-btn"
+              onClick={handleDeleteSelected}
+              disabled={selection.size === 0}
+            >
+              <Trash2 size={14} /> 삭제
+            </button>
+          </div>
         )}
       </div>
 
@@ -317,42 +401,54 @@ export default function WorkoutPage() {
             </div>
           </div>
 
-          <div className="exercise-list">
-            {workoutData.map((ex, i) => {
-              const checked = selection.isSelected(i)
-              if (selection.enabled) {
-                return (
-                  <div
-                    key={i}
-                    className={`exercise-select-wrap selectable ${checked ? 'selected' : ''}`}
-                    onClick={() => selection.toggle(i)}
-                    role="button"
-                  >
-                    <span className={`sel-checkbox ${checked ? 'checked' : ''}`} aria-hidden="true">
-                      {checked && <Check size={14} strokeWidth={3} />}
-                    </span>
-                    <div className="exercise-select-card">
-                      <ExerciseCard
-                        exercise={ex}
-                        index={i}
-                        isCompleted={isFullyDone(i)}
-                        isCurrent={false}
-                      />
+          {weightEditMode ? (
+            <WeightEditList
+              exerciseEntries={selectedEntries}
+              onSave={handleSaveSelectedWeights}
+              onCancel={() => setWeightEditMode(false)}
+            />
+          ) : (
+            <div className="exercise-list">
+              {workoutData.map((ex, i) => {
+                const checked = selection.isSelected(i)
+                if (selection.enabled) {
+                  return (
+                    <div
+                      key={i}
+                      className={`exercise-select-wrap ${checked ? 'selected' : ''}`}
+                      onClick={() => selection.toggle(i)}
+                      role="checkbox"
+                      aria-checked={checked}
+                    >
+                      <span className={`sel-checkbox ${checked ? 'checked' : ''}`}>
+                        {checked && <Check size={16} strokeWidth={3} />}
+                      </span>
+                      <div className="exercise-select-card">
+                        <ExerciseCard
+                          exercise={ex}
+                          index={i}
+                          isCompleted={isFullyDone(i)}
+                          isCurrent={false}
+                          bodyWeight={bodyWeight}
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )
+                }
+                return (
+                  <ExerciseCard
+                    key={i}
+                    exercise={ex}
+                    index={i}
+                    isCompleted={isFullyDone(i)}
+                    isCurrent={false}
+                    onWeightStep={(delta) => handleQuickWeightStep(i, delta)}
+                    bodyWeight={bodyWeight}
+                  />
                 )
-              }
-              return (
-                <ExerciseCard
-                  key={i}
-                  exercise={ex}
-                  index={i}
-                  isCompleted={isFullyDone(i)}
-                  isCurrent={false}
-                />
-              )
-            })}
-          </div>
+              })}
+            </div>
+          )}
 
           {!allDone && !selection.enabled && (
             <div className="workout-start-btns">

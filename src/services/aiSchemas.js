@@ -217,14 +217,17 @@ YYYYMMDD: ${ymd} — Weekday: ${dayKo}요일 (${dayEn})
 // 한 작업당 짧고 집중된 프롬프트 — 토큰 절감 + 모델 집중
 
 export function buildWorkoutPrompt(memory = {}, autoSummary = {}, extraNotes = '') {
+  const { dateStr, dayKo, dayEn } = todayMeta()
   const ctx = buildContextBlock(memory, autoSummary, extraNotes)
-  const plan = memory.workoutPlan ? `\n# Workout Master Plan\n${memory.workoutPlan}\n` : ''
+  const plan = memory.workoutPlan
+    ? `\n# Workout Master Plan\n⚠️ TODAY IS ${dayKo}요일 (${dayEn}). If this plan splits workouts by weekday, you MUST generate ${dayKo}요일's exercises ONLY — not another day's.\n${memory.workoutPlan}\n`
+    : ''
 
-  return `You are this user's personal fitness coach. Generate today's workout routine and return it as JSON matching the provided schema.
+  return `You are this user's personal fitness coach. Generate TODAY's (${dayKo}요일, ${dayEn}, ${dateStr}) workout routine and return it as JSON matching the provided schema.
 
 ${ctx}${plan}
 # Rules
-- Match today's weekday with the user's master plan workout split if provided.
+- **TODAY IS ${dayKo}요일 (${dayEn}). You MUST match this weekday to the master plan's split. Do NOT generate a different day's workout.**
 - Exercise names MUST be specific — include equipment/grip (e.g. "케이블 트라이셉스 푸시다운 (V바)", "인클라인 덤벨 컬").
 - Reps as a range ("10-12", "12-15"). Finisher = "최대 횟수" with 2 sets + 75s rest.
 - For running, write pace and recovery in the name (e.g. "400m 인터벌 런 (13-14km/h 질주 90초 + 6km/h 90초 회복)"). rest_seconds = 0. sets = interval count. reps_or_duration = total minutes.
@@ -238,6 +241,7 @@ Return JSON only — no extra text.`
 }
 
 export function buildMealPrompt(memory = {}, autoSummary = {}, extraNotes = '') {
+  const { dateStr, dayKo, dayEn } = todayMeta()
   const ctx = buildContextBlock(memory, autoSummary, extraNotes, {
     insightKinds: ['meal_no_record'],
   })
@@ -255,7 +259,7 @@ export function buildMealPrompt(memory = {}, autoSummary = {}, extraNotes = '') 
 - WPI 프로틴 1스쿱(30g) ≈ 110kcal / P23 / C2 / F1
 `
 
-  return `You are this user's personal fitness coach. Generate today's meal plan and return it as JSON matching the provided schema.
+  return `You are this user's personal fitness coach. Generate TODAY's (${dayKo}요일, ${dayEn}, ${dateStr}) meal plan and return it as JSON matching the provided schema.
 
 ${ctx}${plan}
 # Critical Rules
@@ -284,15 +288,16 @@ Return JSON only — no extra text.`
 }
 
 export function buildSchedulePrompt(memory = {}, autoSummary = {}, extraNotes = '') {
+  const { dateStr, dayKo, dayEn } = todayMeta()
   const ctx = buildContextBlock(memory, autoSummary, extraNotes, {
     includeWorkoutTrend: false,
     insightKinds: ['schedule_skipped', 'workout_skipped', 'workout_partial'],
   })
   const plan = memory.workoutPlan || memory.mealPlan
-    ? `\n# Reference Plans\n${memory.workoutPlan ? `## Workout\n${memory.workoutPlan}\n` : ''}${memory.mealPlan ? `## Meal\n${memory.mealPlan}\n` : ''}`
+    ? `\n# Reference Plans\n⚠️ TODAY IS ${dayKo}요일 (${dayEn}). Build the schedule around ${dayKo}요일's workout and meals from the plans below.\n${memory.workoutPlan ? `## Workout Plan\n${memory.workoutPlan}\n` : ''}${memory.mealPlan ? `## Meal Plan\n${memory.mealPlan}\n` : ''}`
     : ''
 
-  return `You are this user's personal fitness coach. Generate today's daily schedule (timeline) and return it as JSON matching the provided schema.
+  return `You are this user's personal fitness coach. Generate TODAY's (${dayKo}요일, ${dayEn}, ${dateStr}) daily schedule (timeline) and return it as JSON matching the provided schema.
 
 ${ctx}${plan}
 # Rules

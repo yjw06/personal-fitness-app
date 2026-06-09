@@ -216,3 +216,298 @@
   width: 100%;
   margin-top: 0.875rem;
 }
+
+/* ─── AI 코치 통합 패널 ─────────────────────────────────────── */
+
+.aic-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.aic-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aic-header-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: rgba(200, 255, 0, 0.1);
+  border: 1px solid rgba(200, 255, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.aic-title {
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--color-text);
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.aic-subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin: 2px 0 0;
+}
+
+/* 모드 카드 */
+.aic-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.aic-mode-card {
+  position: relative;
+  background: var(--color-surface-2, rgba(255,255,255,0.04));
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px 14px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.aic-mode-card:active { transform: scale(0.97); }
+
+.aic-mode-card.active {
+  border-color: var(--color-primary);
+  background: rgba(200, 255, 0, 0.06);
+  box-shadow: 0 0 0 1px rgba(200,255,0,0.12), 0 4px 20px rgba(200,255,0,0.1);
+}
+
+.aic-mode-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.aic-mode-card.active .aic-mode-icon {
+  background: rgba(200, 255, 0, 0.15);
+  color: var(--color-primary);
+}
+
+.aic-mode-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+
+.aic-mode-desc {
+  font-size: 0.695rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.aic-mode-check {
+  position: absolute;
+  top: 11px;
+  right: 11px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.aic-mode-card.active .aic-mode-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 컨텍스트 바 */
+.aic-context {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.aic-ctx-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 7px rgba(200,255,0,0.65);
+}
+
+/* 실행 버튼 */
+.aic-run-btn {
+  width: 100%;
+  height: 50px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: var(--radius-lg);
+}
+
+/* 결과 컨테이너 */
+.aic-result {
+  background: rgba(255,255,255,0.015);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.aic-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(255,255,255,0.02);
+}
+
+.aic-result-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.675rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.aic-result-rerun {
+  font-size: 0.72rem !important;
+  padding: 4px 9px !important;
+  height: 28px !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-muted) !important;
+}
+
+.aic-result-body {
+  padding: 14px 16px;
+}
+
+/* 과부하 카드 리스트 */
+.aic-prog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.aic-prog-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 11px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--prog-color, var(--color-border));
+}
+
+.aic-prog-card[data-status="increase"] { --prog-color: var(--color-primary); border-left-color: var(--color-primary); }
+.aic-prog-card[data-status="hold"]     { --prog-color: #22d3ee; border-left-color: #22d3ee; }
+.aic-prog-card[data-status="decrease"] { --prog-color: #ef4444; border-left-color: #ef4444; }
+.aic-prog-card[data-status="new"]      { --prog-color: #a78bfa; border-left-color: #a78bfa; }
+
+.aic-prog-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.aic-prog-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.aic-prog-badge {
+  font-size: 0.665rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.aic-prog-badge--increase { background: rgba(200,255,0,0.14); color: var(--color-primary); }
+.aic-prog-badge--hold     { background: rgba(34,211,238,0.12); color: #22d3ee; }
+.aic-prog-badge--decrease { background: rgba(239,68,68,0.12); color: #ef4444; }
+.aic-prog-badge--new      { background: rgba(167,139,250,0.12); color: #a78bfa; }
+
+.aic-prog-weight {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-variant-numeric: tabular-nums;
+}
+
+.aic-prog-curr {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.aic-prog-arrow {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  opacity: 0.45;
+}
+
+.aic-prog-target {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--prog-color, var(--color-text));
+  letter-spacing: -0.02em;
+}
+
+.aic-prog-reason {
+  font-size: 0.71rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.aic-result-footer {
+  padding: 10px 12px 12px;
+  border-top: 1px solid var(--color-border);
+}
