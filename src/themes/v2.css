@@ -212,6 +212,11 @@ html[data-ui='v2'] .timer-seconds   { font-size: 3.75rem; }
 html[data-ui='v2'] .ae-info-val     { font-size: 2.75rem; }
 /* 반복/시간 값("12-15", "최대 횟수")은 길어서 작게 + 하이픈 줄바꿈 금지 */
 html[data-ui='v2'] .ae-info-val.ae-reps-val { font-size: 1.5rem; white-space: nowrap; }
+
+/* 정보 카드 높이 통일 — 내용 크기가 달라도 행 높이에 맞춰 늘림 */
+html[data-ui='v2'] .ae-info-row { align-items: stretch; }
+html[data-ui='v2'] .ae-info-row .ae-slash { align-self: center; }
+html[data-ui='v2'] .ae-info-card { justify-content: center; }
 html[data-ui='v2'] .vol-today-total { font-size: 3rem; font-weight: 700; }
 html[data-ui='v2'] .summary-val     { font-size: 1.5rem; }
 
