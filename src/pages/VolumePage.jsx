@@ -7,6 +7,7 @@ import { useSettingsStore } from '../stores/settingsStore'
 import { useMemoryStore } from '../stores/memoryStore'
 import { fetchVolumeHistory } from '../services/csvService'
 import { callGeminiChat, callGeminiJSON } from '../services/aiCoach'
+import { computeProgression } from '../utils/progressionLocal'
 import {
   aggregateVolumeByPart, totalVolume,
   calcExerciseVolume, calcRepVolume, isCardio, isAssistExercise, fmtVolume,
@@ -16,25 +17,23 @@ import BarChart  from '../components/Chart/BarChart'
 import { Sparkles, TrendingUp, Check, RefreshCw } from 'lucide-react'
 import './VolumePage.css'
 
-const PROGRESSION_SCHEMA = {
+// 과부하 판정은 로컬 계산 (progressionLocal.js) — AI는 코멘트 보강에만 사용
+const COMMENT_SCHEMA = {
   type: 'object',
   properties: {
-    recommendations: {
+    comments: {
       type: 'array',
       items: {
         type: 'object',
         properties: {
-          exercise_name: { type: 'string' },
-          current_kg:    { type: 'number' },
-          target_kg:     { type: 'number' },
-          status:        { type: 'string', enum: ['increase', 'hold', 'decrease', 'new'] },
-          reason:        { type: 'string' },
+          exercise_name: { type: 'string', description: 'Exact exercise name from the input' },
+          comment:       { type: 'string', description: 'One Korean sentence: actionable coaching tip for this progression decision' },
         },
-        required: ['exercise_name', 'current_kg', 'target_kg', 'status', 'reason'],
+        required: ['exercise_name', 'comment'],
       },
     },
   },
-  required: ['recommendations'],
+  required: ['comments'],
 }
 
 const PART_COLORS = {
@@ -183,80 +182,42 @@ ${weeklyLines}
   }, [apiKey, aiModel, memory, todayExercises, byPartToday, partTotals7, totalToday, selectedDate])
 
   const handleProgressionPlan = useCallback(async () => {
-    if (!apiKey) { setProgError('설정에서 Gemini API 키를 먼저 등록해 주세요.'); return }
-    setProgLoading(true)
     setProgError('')
-    setProgression(null)
 
-    // Build exercise history text from 14-day data
-    const historyText = history
-      .filter(({ rows }) => rows.some((r) => r.weight_kg != null))
-      .map(({ date, rows, completedReps = {} }) => {
-        const exs = rows
-          .filter((r) => r.weight_kg != null)
-          .map((r, exIdx) => {
-            const totalSets = parseInt(r.sets) || 3
-            const targetReps = parseInt(r.reps_or_duration)
-            const repsMap = completedReps[exIdx]
-            let setsStr
-            if (repsMap && Object.keys(repsMap).length > 0) {
-              setsStr = Array.from({ length: totalSets }, (_, si) => {
-                const actual = repsMap[si]
-                if (actual == null) return null
-                return Number.isFinite(targetReps) && actual >= targetReps
-                  ? `${actual}회✓`
-                  : `${actual}회`
-              }).filter(Boolean).join(', ')
-            }
-            const base = `${r.exercise_name}(${r.weight_kg}kg×${r.sets}세트×${r.reps_or_duration})`
-            return setsStr ? `${base} [실제: ${setsStr}]` : base
-          })
-          .join(', ')
-        return exs ? `${date}: ${exs}` : null
-      })
-      .filter(Boolean)
-      .join('\n') || '기록 없음'
+    // 1) 판정·목표 중량은 로컬 계산 — 즉시 표시, API 오류 불가능
+    const local = computeProgression(history)
+    setProgression(local)
+    if (!local.length || !apiKey) return
 
-    // Build current targets text
-    const targetsText = Object.keys(memory.progressTargets ?? {}).length
-      ? Object.entries(memory.progressTargets).map(([name, t]) =>
-          `- ${name}: 현재${t.currentKg}kg → 목표${t.targetKg}kg (${t.status === 'hold' ? '홀드중' : '진행중'})`
-        ).join('\n')
-      : '없음 (첫 분석)'
-
-    const system = `너는 진행성 과부하 전문 피트니스 코치야.
-사용자의 최근 운동 기록을 분석해서 운동별 다음 목표 중량을 제안해.
-
-[현재 진행 목표]
-${targetsText}
-
-[최근 14일 중량 운동 기록]
-${historyText}
-
-각 중량 운동에 대해 recommendations 배열에 포함해:
-- status: "increase"(목표 달성, 증량 준비) | "hold"(현재 유지) | "decrease"(감량 권장) | "new"(첫 기록)
-- current_kg: 가장 최근 기록된 중량
-- target_kg: 다음 목표 (hold면 current_kg와 동일)
-- reason: 판단 근거 (한국어 1-2문장)
-
-증량 기준: 같은 중량 2회 이상 기록 → increase 검토. 상체 +2.5~5kg, 하체 +5~10kg.
-불규칙하거나 1회만 기록 → hold. 중량 없는 운동(맨몸/런닝) → 제외.`
-
+    // 2) 코멘트만 선택적 AI 보강 — 실패해도 판정 결과는 유지
+    setProgLoading(true)
     try {
+      const lines = local.map((r) =>
+        `- ${r.exercise_name}: ${r.current_kg}kg → ${r.target_kg}kg (${r.status}) / ${r.reason}`
+      ).join('\n')
+
+      const system = `너는 점진적 과부하 전문 피트니스 코치야.
+아래는 앱이 규칙 기반으로 이미 확정한 운동별 중량 판정이야. 판정을 바꾸지 말고,
+각 운동에 대해 사용자에게 실질적으로 도움이 되는 코칭 코멘트를 한국어 1문장으로 작성해.
+(예: 보조 운동 추천, 자세 포인트, 호흡, 증량 시 주의점 등 — 판정 근거 반복 금지)
+
+[확정된 판정]
+${lines}`
+
       const { data } = await callGeminiJSON({
-        apiKey,
-        model: aiModel,
-        system,
-        schema: PROGRESSION_SCHEMA,
-        maxOutputTokens: 2048,
+        apiKey, model: aiModel, system,
+        schema: COMMENT_SCHEMA, maxOutputTokens: 2048,
       })
-      setProgression(data?.recommendations ?? [])
-    } catch (err) {
-      setProgError(err.message || '진행 계획 분석 중 오류가 발생했어요.')
+      const map = new Map((data?.comments ?? []).map((c) => [c.exercise_name, c.comment]))
+      setProgression((prev) => (prev ?? []).map((r) =>
+        map.get(r.exercise_name) ? { ...r, reason: `${r.reason} ${map.get(r.exercise_name)}` } : r
+      ))
+    } catch {
+      // AI 코멘트 실패는 조용히 무시 — 로컬 판정이 이미 표시됨
     } finally {
       setProgLoading(false)
     }
-  }, [apiKey, aiModel, history, memory.progressTargets])
+  }, [apiKey, aiModel, history])
 
   return (
     <main className="page-content volume-page" role="main">

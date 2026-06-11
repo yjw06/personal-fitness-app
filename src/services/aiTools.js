@@ -3,6 +3,7 @@
 
 import { saveWorkoutData, saveMealData, saveScheduleData } from './csvService'
 import { useMemoryStore } from '../stores/memoryStore'
+import { validateAndFix, inferBodyWeight } from './aiValidate'
 
 const VALID_BODY_PARTS = ['가슴', '등', '하체', '어깨', '팔', '코어', '러닝']
 const VALID_MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack', 'supplement']
@@ -63,16 +64,16 @@ export function splitCompositeFood(row) {
 // AI가 반환한 구조화 데이터(JSON)를 검증·정규화 후 저장
 // 반환: { ok, count, summary } 또는 throw
 
-export async function persistWorkout(uid, date, data) {
+export async function persistWorkout(uid, date, data, issues = []) {
   const exercises = data?.exercises || []
   if (!exercises.length) throw new Error('운동 종목이 비어있어요.')
 
   const rows = exercises.map((ex, i) => normalizeWorkoutRow(ex, i))
   await saveWorkoutData(uid, date, rows)
-  return { ok: true, count: rows.length, summary: `운동 ${rows.length}종목 저장됨` }
+  return { ok: true, count: rows.length, issues, summary: withIssueNote(`운동 ${rows.length}종목 저장됨`, issues) }
 }
 
-export async function persistMeal(uid, date, data) {
+export async function persistMeal(uid, date, data, issues = []) {
   const meals = data?.meals || []
   if (!meals.length) throw new Error('식사 항목이 비어있어요.')
 
@@ -86,10 +87,10 @@ export async function persistMeal(uid, date, data) {
   if (data.fat_target)     rows[0].fat_target     = data.fat_target
 
   await saveMealData(uid, date, rows)
-  return { ok: true, count: rows.length, summary: `식단 ${rows.length}끼 저장됨` }
+  return { ok: true, count: rows.length, issues, summary: withIssueNote(`식단 ${rows.length}끼 저장됨`, issues) }
 }
 
-export async function persistSchedule(uid, date, data) {
+export async function persistSchedule(uid, date, data, issues = []) {
   const items = data?.items || []
   if (!items.length) throw new Error('스케줄 항목이 비어있어요.')
 
@@ -102,14 +103,25 @@ export async function persistSchedule(uid, date, data) {
   }))
 
   await saveScheduleData(uid, date, rows)
-  return { ok: true, count: rows.length, summary: `스케줄 ${rows.length}개 저장됨` }
+  return { ok: true, count: rows.length, issues, summary: withIssueNote(`스케줄 ${rows.length}개 저장됨`, issues) }
 }
 
-// kind 디스패치
+function withIssueNote(summary, issues) {
+  return issues.length ? `${summary} · 자동 보정 ${issues.length}건` : summary
+}
+
+// kind 디스패치 — 저장 전 검증·자동 보정 (aiValidate)
 export async function persistByKind(kind, uid, date, data) {
-  if (kind === 'workout')  return persistWorkout(uid, date, data)
-  if (kind === 'meal')     return persistMeal(uid, date, data)
-  if (kind === 'schedule') return persistSchedule(uid, date, data)
+  const mem = useMemoryStore.getState()
+  const ctx = {
+    bodyWeight: inferBodyWeight(mem),
+    progressTargets: mem.progressTargets,
+  }
+  const { data: fixed, issues } = validateAndFix(kind, data, ctx)
+
+  if (kind === 'workout')  return persistWorkout(uid, date, fixed, issues)
+  if (kind === 'meal')     return persistMeal(uid, date, fixed, issues)
+  if (kind === 'schedule') return persistSchedule(uid, date, fixed, issues)
   throw new Error(`알 수 없는 작업 종류: ${kind}`)
 }
 

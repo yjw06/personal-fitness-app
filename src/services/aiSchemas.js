@@ -296,7 +296,7 @@ ${ctx}${plan}
 - Main meals (breakfast/lunch/dinner): 2-3 foods each
 - Snack: 1-2 items max
 - Supplement: 1-2 items max
-- Skip optional protein_target/carbs_target/fat_target if user weight unknown.
+- Always include protein_target AND carbs_target AND fat_target when user weight is known (P = W×1.6~2.2, C = W×3~4, F = W×0.8~1).
 - Use short food_name (no unnecessary descriptions).
 ${macroRef}
 # Output Language

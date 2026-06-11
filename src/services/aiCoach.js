@@ -21,6 +21,24 @@ export const AVAILABLE_MODELS = [
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const TRANSIENT_STATUSES = new Set([429, 500, 502, 503, 504])
 
+// gemini-2.5는 기본 thinking이 켜져 있어 생각 토큰이 maxOutputTokens를
+// 잠식 → 빈 응답의 주원인. 구조화 생성/대화엔 thinking 불필요.
+// pro는 thinking 비활성화 불가(최소 128) — flash 계열만 0으로 끈다.
+function thinkingConfigFor(model) {
+  if (model.includes('pro')) return undefined
+  return { thinkingBudget: 0 }
+}
+
+// finishReason → 사용자용 에러 메시지
+function emptyResponseMessage(finishReason) {
+  switch (finishReason) {
+    case 'SAFETY':     return 'AI 안전 필터에 걸렸어요. 표현을 바꿔 다시 시도해 주세요.'
+    case 'RECITATION': return '인용 제한으로 응답이 중단됐어요. 다시 시도해 주세요.'
+    case 'MAX_TOKENS': return '응답이 토큰 한도에서 잘렸어요. 다시 시도해 주세요.'
+    default:           return 'AI가 빈 응답을 반환했어요. 잠시 후 다시 시도해 주세요.'
+  }
+}
+
 export const COMPRESS_AT   = 16  // rawContents 이 길이 이상이면 압축
 const        COMPRESS_KEEP = 8   // 최근 N개 entry는 유지
 
@@ -118,13 +136,26 @@ async function callOnce({ apiKey, model, body }) {
   if (!res.ok) {
     const errText = await res.text()
     let msg = `Gemini API 오류 (${res.status})`
-    try { msg = JSON.parse(errText).error?.message || msg } catch { msg = errText.slice(0, 200) || msg }
-    const err = new Error(msg); err.status = res.status; throw err
+    let retryDelayMs = null
+    try {
+      const parsed = JSON.parse(errText)
+      msg = parsed.error?.message || msg
+      // 429 응답의 RetryInfo: { "retryDelay": "32s" }
+      const retryInfo = parsed.error?.details?.find((d) => d['@type']?.includes('RetryInfo'))
+      const delayStr = retryInfo?.retryDelay
+      if (delayStr) retryDelayMs = Math.min(parseFloat(delayStr) * 1000 || 0, 10000)
+    } catch { msg = errText.slice(0, 200) || msg }
+    const err = new Error(msg)
+    err.status = res.status
+    if (retryDelayMs) err.retryDelayMs = retryDelayMs
+    throw err
   }
   return res.json()
 }
 
 // ─── 재시도 + 폴백 wrapper ─────────────────────────────────
+// 모델당 최대 2회 (백오프 + jitter, Retry-After 존중) → 실패 시 폴백 체인.
+// overload(503/high demand)도 즉시 포기하지 않고 한 번 기다렸다 재시도.
 async function callWithRetry({ apiKey, model, body, onModelSwitch }) {
   if (!apiKey) throw new Error('Gemini API 키가 설정되지 않았습니다. 설정에서 등록해주세요.')
 
@@ -133,16 +164,26 @@ async function callWithRetry({ apiKey, model, body, onModelSwitch }) {
 
   for (let m = 0; m < chain.length; m++) {
     const currentModel = chain[m]
+    // 폴백 모델에 맞춰 thinkingConfig 갱신 (pro↔flash 차이)
+    if (body.generationConfig) {
+      const tc = thinkingConfigFor(currentModel)
+      if (tc) body.generationConfig.thinkingConfig = tc
+      else delete body.generationConfig.thinkingConfig
+    }
+
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         return await callOnce({ apiKey, model: currentModel, body })
       } catch (err) {
         lastErr = err
-        const transient = TRANSIENT_STATUSES.has(err.status)
-        const isOverload = err.status === 503 ||
-          /overload|unavailable|high demand|currently experiencing/i.test(err.message || '')
-        if (!transient) throw err
-        if (attempt === 0 && !isOverload) { await sleep(800); continue }
+        if (!TRANSIENT_STATUSES.has(err.status)) throw err
+        if (attempt === 0) {
+          // API가 알려준 대기시간 > 지수 백오프(1s) + jitter
+          const wait = err.retryDelayMs ?? (1000 + Math.random() * 500)
+          await sleep(wait)
+          continue
+        }
+        // 2회 실패 → 다음 모델로 폴백
         if (m < chain.length - 1) {
           try { onModelSwitch?.(currentModel, chain[m + 1], err.message) } catch {}
         }
@@ -171,6 +212,8 @@ export async function callGeminiJSON({
       maxOutputTokens,
       responseMimeType: 'application/json',
       responseSchema: schema,
+      // flash 계열: thinking 끔 — 생각 토큰이 출력을 잠식해 빈 응답/잘림 유발
+      ...(thinkingConfigFor(model) ? { thinkingConfig: thinkingConfigFor(model) } : {}),
     },
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
@@ -191,7 +234,7 @@ export async function callGeminiJSON({
       const text = parts.filter((p) => p.text).map((p) => p.text).join('')
 
       if (!text) {
-        throw new Error('AI가 빈 응답을 반환했어요.')
+        throw new Error(emptyResponseMessage(finishReason))
       }
 
       // 응답이 토큰 한계로 잘렸으면 — JSON 파싱 시도 후 실패하면 의미 있는 에러
@@ -288,7 +331,12 @@ export async function callGeminiChat({
     systemInstruction: { parts: [{ text: buildChatSystemInstruction(memory, autoSummary) }] },
     tools: [{ functionDeclarations: CHAT_TOOLS }],
     toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
-    generationConfig: { temperature: 0.7, topP: 0.95, maxOutputTokens: 4096 },
+    generationConfig: {
+      temperature: 0.7,
+      topP: 0.95,
+      maxOutputTokens: 8192,
+      ...(thinkingConfigFor(model) ? { thinkingConfig: thinkingConfigFor(model) } : {}),
+    },
     safetySettings: [
       { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
@@ -297,8 +345,14 @@ export async function callGeminiChat({
     ],
   }
 
-  const response = await callWithRetry({ apiKey, model, body, onModelSwitch })
-  return extractChatResponse(response)
+  // 빈 응답이면 1회 자동 재시도 (일시적 현상이 대부분)
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const response = await callWithRetry({ apiKey, model, body, onModelSwitch })
+    const extracted = extractChatResponse(response)
+    if (extracted.text || extracted.functionCalls.length) return extracted
+    if (attempt === 0) { await sleep(600); continue }
+    throw new Error(emptyResponseMessage(extracted.finishReason))
+  }
 }
 
 export function extractChatResponse(geminiResponse) {
