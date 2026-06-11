@@ -1,0 +1,246 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&display=swap');
+
+/* ════════════════════════════════════════════════════════════
+   UI ver.2 — "INFRARED"
+   다크 + 구조 전면 개편: 인플로우 히어로 헤더(HeaderV2),
+   센터 FAB 독(BottomNavV2), 페이지 레이아웃 재구성.
+   html[data-ui='v2'] 스코프 안에서만 동작 — v1에 영향 없음.
+   ════════════════════════════════════════════════════════════ */
+
+html[data-ui='v2'] {
+  /* Core palette */
+  --color-bg:          #0b0a0d;
+  --color-surface:     #141318;
+  --color-surface-2:   #1d1c23;
+  --color-surface-3:   #28262f;
+  --color-border:      rgba(255,255,255,0.07);
+
+  /* Accent: Ember Orange */
+  --color-primary:     #ff5c2e;
+  --color-primary-rgb: 255, 92, 46;
+  --color-primary-2:   #ffa62e;
+  --color-primary-dim: rgba(255,92,46,0.13);
+  --color-primary-mid: rgba(255,92,46,0.28);
+  --color-primary-dark:#2a1208;
+
+  --color-accent:      #ff5c2e;
+  --color-info:        #4dc9ff;
+
+  --color-text:        #f7f5f3;
+  --color-text-2:      #a8a3a0;
+  --color-text-3:      #6b6664;
+
+  /* Radius — 더 부드럽게 */
+  --radius-sm:   12px;
+  --radius-md:   16px;
+  --radius-lg:   22px;
+  --radius-xl:   30px;
+
+  /* Typography */
+  --font-display: 'Barlow Condensed', 'Inter', -apple-system, system-ui, sans-serif;
+
+  /* Shadows */
+  --shadow-glow: 0 8px 30px rgba(255,92,46,0.28);
+  --shadow-glow-strong: 0 10px 44px rgba(255,92,46,0.42);
+
+  /* Layout — 플로팅 독 + FAB 공간 확보 */
+  --nav-height: 100px;
+}
+
+/* ─── 배경 앰비언트 글로우 ─── */
+html[data-ui='v2'] body {
+  background:
+    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(255,92,46,0.08), transparent 60%),
+    radial-gradient(ellipse 60% 35% at 85% 110%, rgba(124,77,255,0.07), transparent 65%),
+    var(--color-bg);
+  background-attachment: fixed;
+}
+
+/* ─── 레이아웃 — 헤더가 인플로우이므로 상단 패딩 축소 ─── */
+html[data-ui='v2'] .page-content {
+  padding-top: var(--space-sm);
+}
+
+/* ─── 카드 — 그라디언트 서피스 ─── */
+html[data-ui='v2'] .card {
+  background: linear-gradient(180deg, #17161c, #121116);
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+html[data-ui='v2'] .card-glass {
+  background: rgba(23,22,28,0.85);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ─── 버튼 — 그라디언트 프라이머리 ─── */
+html[data-ui='v2'] .btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-2));
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+html[data-ui='v2'] .btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+/* ════════════════════════════════════════════
+   스케줄 페이지 재구성
+   ════════════════════════════════════════════ */
+
+/* 페이지 자체 날짜 헤더 — HeaderV2가 대체하므로 숨김 */
+html[data-ui='v2'] .schedule-date-header {
+  display: none;
+}
+
+/* 요일 셀렉터 → 캡슐 카드 스트립 */
+html[data-ui='v2'] .weekday-selector {
+  gap: 6px;
+  padding: 2px 0 6px;
+}
+html[data-ui='v2'] .weekday-item {
+  background: var(--color-surface);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px;
+  padding: 10px 0 12px;
+  gap: 7px;
+}
+html[data-ui='v2'] .weekday-item.today {
+  background: linear-gradient(180deg, rgba(255,92,46,0.18), rgba(255,92,46,0.04));
+  border-color: rgba(255,92,46,0.35);
+}
+html[data-ui='v2'] .weekday-item.today .day-num {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-2));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(255,92,46,0.4);
+}
+html[data-ui='v2'] .weekday-item.selected:not(.today) {
+  border-color: rgba(255,92,46,0.3);
+}
+
+/* 버튼 텍스트 줄바꿈 금지 (375px 등 좁은 화면 대응) */
+html[data-ui='v2'] .btn,
+html[data-ui='v2'] .wt-btn-label {
+  white-space: nowrap;
+}
+
+/* 툴바 → 가로 스크롤 칩 행 (.wt-main은 운동 탭의 실제 버튼 행) */
+html[data-ui='v2'] .schedule-toolbar,
+html[data-ui='v2'] .wt-main,
+html[data-ui='v2'] .body-toolbar {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 calc(-1 * var(--space-md));
+  padding: 2px var(--space-md);
+}
+html[data-ui='v2'] .schedule-toolbar::-webkit-scrollbar,
+html[data-ui='v2'] .wt-main::-webkit-scrollbar,
+html[data-ui='v2'] .body-toolbar::-webkit-scrollbar {
+  display: none;
+}
+html[data-ui='v2'] .schedule-toolbar > *,
+html[data-ui='v2'] .body-toolbar > * {
+  flex-shrink: 0;
+}
+/* 운동 탭 버튼 행 — flex 비율 대신 내용 크기 + 스크롤 */
+html[data-ui='v2'] .wt-main > * {
+  flex: 0 0 auto;
+}
+
+/* 진행 요약 → 엠버 그라디언트 밴드 */
+html[data-ui='v2'] .schedule-summary {
+  background: linear-gradient(135deg, rgba(255,92,46,0.16), rgba(255,166,46,0.06));
+  border: 1px solid rgba(255,92,46,0.22);
+}
+
+/* 타임라인 카드 */
+html[data-ui='v2'] .tl-card {
+  border-radius: var(--radius-md);
+}
+html[data-ui='v2'] .tl-item.current .tl-card {
+  box-shadow: 0 0 0 1px rgba(255,92,46,0.3), 0 8px 26px rgba(255,92,46,0.12);
+}
+
+/* ════════════════════════════════════════════
+   AI 코치 페이지 재구성
+   ════════════════════════════════════════════ */
+
+/* 페이지 자체 헤더 — HeaderV2가 대체 */
+html[data-ui='v2'] .coach-header {
+  display: none;
+}
+
+/* 명령어 그리드 → 가로 스냅 스크롤 카드 */
+html[data-ui='v2'] .coach-cmd-grid {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  gap: 10px;
+  margin: 0 calc(-1 * var(--space-md));
+  padding: 4px var(--space-md);
+}
+html[data-ui='v2'] .coach-cmd-grid::-webkit-scrollbar {
+  display: none;
+}
+html[data-ui='v2'] .coach-cmd-card {
+  min-width: 168px;
+  scroll-snap-align: start;
+  border-radius: var(--radius-md);
+}
+
+/* 말풍선 */
+html[data-ui='v2'] .user-bubble {
+  background: linear-gradient(135deg, rgba(255,92,46,0.18), rgba(255,166,46,0.12));
+  border: 1px solid rgba(255,92,46,0.22);
+  color: var(--color-text);
+}
+
+/* ════════════════════════════════════════════
+   디스플레이 타이포 — 콘덴스드 + 그라디언트 숫자
+   ════════════════════════════════════════════ */
+
+html[data-ui='v2'] .timer-seconds,
+html[data-ui='v2'] .ae-info-val,
+html[data-ui='v2'] .vol-today-total,
+html[data-ui='v2'] .summary-val,
+html[data-ui='v2'] .body-stat-val,
+html[data-ui='v2'] .login-title {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+}
+html[data-ui='v2'] .timer-seconds   { font-size: 3.75rem; }
+html[data-ui='v2'] .ae-info-val     { font-size: 2.75rem; }
+html[data-ui='v2'] .vol-today-total { font-size: 3rem; font-weight: 700; }
+html[data-ui='v2'] .summary-val     { font-size: 1.5rem; }
+
+html[data-ui='v2'] .ae-info-val,
+html[data-ui='v2'] .vol-today-total,
+html[data-ui='v2'] .login-title {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ─── 프로그레스 바 ─── */
+html[data-ui='v2'] .progress-fill {
+  background: linear-gradient(90deg, var(--color-primary), var(--color-primary-2)) !important;
+}
+
+/* ─── 폼 포커스 ─── */
+html[data-ui='v2'] input:focus,
+html[data-ui='v2'] textarea:focus,
+html[data-ui='v2'] select:focus {
+  outline-color: var(--color-primary);
+}
+
+/* ─── 코치 입력바 — 독 위 글래스 필 ─── */
+html[data-ui='v2'] .coach-input-row {
+  bottom: calc(var(--nav-height) - 8px);
+}
+
+/* ─── 모션 줄이기 존중 ─── */
+@media (prefers-reduced-motion: reduce) {
+  html[data-ui='v2'] * { transition-duration: 0.01ms !important; }
+}

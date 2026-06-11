@@ -11,8 +11,10 @@
 
   /* Accent: Neon Lime */
   --color-primary:     #c8ff00;
-  --color-primary-dim: rgba(200,255,0,0.12);
-  --color-primary-mid: rgba(200,255,0,0.25);
+  --color-primary-rgb: 200, 255, 0;   /* rgba() 조합용 — 테마별 오버라이드 */
+  --color-primary-2:   #a5e000;       /* 그라디언트 보조색 */
+  --color-primary-dim: rgba(var(--color-primary-rgb),0.12);
+  --color-primary-mid: rgba(var(--color-primary-rgb),0.25);
   --color-primary-dark:#1a2200;
 
   /* Semantic */
@@ -58,8 +60,8 @@
   --shadow-sm: 0 2px 8px rgba(0,0,0,0.5);
   --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
   --shadow-lg: 0 12px 40px rgba(0,0,0,0.7);
-  --shadow-glow: 0 0 30px rgba(200,255,0,0.2);
-  --shadow-glow-strong: 0 0 50px rgba(200,255,0,0.35);
+  --shadow-glow: 0 0 30px rgba(var(--color-primary-rgb),0.2);
+  --shadow-glow-strong: 0 0 50px rgba(var(--color-primary-rgb),0.35);
 
   /* Layout */
   --nav-height: 72px;
@@ -311,8 +313,8 @@ html[data-nav-dir='left']::view-transition-new(root) {
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(200,255,0,0.2); }
-  50%      { box-shadow: 0 0 40px rgba(200,255,0,0.4); }
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--color-primary-rgb),0.2); }
+  50%      { box-shadow: 0 0 40px rgba(var(--color-primary-rgb),0.4); }
 }
 
 @keyframes banner-spring {
@@ -339,9 +341,9 @@ html[data-nav-dir='left']::view-transition-new(root) {
   border-radius: 50%;
   border: 2.5px solid var(--color-surface-3);
   border-top-color: var(--color-primary);
-  border-right-color: rgba(200, 255, 0, 0.4);
+  border-right-color: rgba(var(--color-primary-rgb), 0.4);
   animation: spin 0.75s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
-  filter: drop-shadow(0 0 5px rgba(200, 255, 0, 0.35));
+  filter: drop-shadow(0 0 5px rgba(var(--color-primary-rgb), 0.35));
 }
 
 /* ─── Empty state ─── */

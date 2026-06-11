@@ -16,6 +16,9 @@ const defaults = {
 
   // AI 코치 모델 (Gemini)
   aiModel: 'gemini-2.5-flash',
+
+  // UI 테마 버전 ('v1' 클래식 라임 | 'v2' 인프라레드)
+  uiVersion: 'v2',
 }
 
 // 저장된 설정 로드

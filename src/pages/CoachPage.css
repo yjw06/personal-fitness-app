@@ -626,8 +626,8 @@
   align-items: baseline;
   gap: 6px;
   padding: 4px 12px;
-  background: rgba(200, 255, 0, 0.08);
-  border: 1px solid rgba(200, 255, 0, 0.25);
+  background: rgba(var(--color-primary-rgb), 0.08);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.25);
   border-radius: var(--radius-full);
   animation: fadeInUp 0.15s ease;
   overflow: hidden;

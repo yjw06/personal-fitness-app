@@ -97,7 +97,7 @@
   transition: all 0.3s ease;
 }
 .ae-set-pip.done    { background: var(--color-success); }
-.ae-set-pip.current { background: var(--color-primary); box-shadow: 0 0 8px rgba(200,255,0,0.5); }
+.ae-set-pip.current { background: var(--color-primary); box-shadow: 0 0 8px rgba(var(--color-primary-rgb),0.5); }
 
 .ae-complete-btn {
   font-size: 1.0625rem;

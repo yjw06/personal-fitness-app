@@ -61,7 +61,7 @@
   stroke-width: 6;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.9s linear, stroke 0.3s ease;
-  filter: drop-shadow(0 0 10px rgba(200,255,0,0.5));
+  filter: drop-shadow(0 0 10px rgba(var(--color-primary-rgb),0.5));
 }
 
 .ring-warn {
@@ -71,13 +71,13 @@
 
 .ring-done {
   stroke: var(--color-primary);
-  filter: drop-shadow(0 0 14px rgba(200,255,0,0.55));
+  filter: drop-shadow(0 0 14px rgba(var(--color-primary-rgb),0.55));
   animation: ring-breath 2.4s ease-in-out infinite;
 }
 
 @keyframes ring-breath {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(200,255,0,0.4)); }
-  50%      { filter: drop-shadow(0 0 18px rgba(200,255,0,0.7)); }
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(var(--color-primary-rgb),0.4)); }
+  50%      { filter: drop-shadow(0 0 18px rgba(var(--color-primary-rgb),0.7)); }
 }
 
 .timer-center {
@@ -149,7 +149,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 50;
-  background: radial-gradient(ellipse at center, rgba(200,255,0,0.08), rgba(200,255,0,0) 70%);
+  background: radial-gradient(ellipse at center, rgba(var(--color-primary-rgb),0.08), rgba(var(--color-primary-rgb),0) 70%);
   animation: flash-breath 2.8s ease-in-out infinite;
 }
 
@@ -166,6 +166,6 @@
 }
 
 @keyframes btn-breath {
-  0%, 100% { box-shadow: 0 0 18px rgba(200,255,0,0.35); }
-  50%      { box-shadow: 0 0 32px rgba(200,255,0,0.55); }
+  0%, 100% { box-shadow: 0 0 18px rgba(var(--color-primary-rgb),0.35); }
+  50%      { box-shadow: 0 0 32px rgba(var(--color-primary-rgb),0.55); }
 }

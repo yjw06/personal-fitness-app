@@ -87,16 +87,16 @@
 .exercise-card[role="button"] { cursor: pointer; }
 .exercise-card[role="button"]:hover {
   background: var(--color-surface-2);
-  border-color: rgba(200,255,0,0.15);
+  border-color: rgba(var(--color-primary-rgb),0.15);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 .exercise-card[role="button"]:active { transform: scale(0.98); }
 
 .exercise-card.is-current {
-  border-color: rgba(200,255,0,0.3);
-  background: rgba(200,255,0,0.04);
-  box-shadow: 0 0 0 1px rgba(200,255,0,0.15);
+  border-color: rgba(var(--color-primary-rgb),0.3);
+  background: rgba(var(--color-primary-rgb),0.04);
+  box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb),0.15);
 }
 
 .exercise-card.is-done { opacity: 0.45; }

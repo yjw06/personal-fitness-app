@@ -239,7 +239,7 @@
   border-radius: var(--radius-lg);
   padding: 2px;
   background: var(--color-primary-dim);
-  box-shadow: 0 0 24px rgba(200,255,0,0.18);
+  box-shadow: 0 0 24px rgba(var(--color-primary-rgb),0.18);
   animation: glow-pulse 2.5s ease-in-out infinite;
 }
 

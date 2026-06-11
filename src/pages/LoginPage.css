@@ -5,7 +5,7 @@
   justify-content: center;
   padding: var(--space-lg);
   background:
-    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(200,255,0,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(var(--color-primary-rgb),0.06) 0%, transparent 60%),
     var(--color-bg);
 }
 
@@ -32,13 +32,13 @@
 .login-emblem {
   font-size: 3.5rem;
   line-height: 1;
-  filter: drop-shadow(0 0 20px rgba(200,255,0,0.4));
+  filter: drop-shadow(0 0 20px rgba(var(--color-primary-rgb),0.4));
 }
 
 .login-title {
   font-size: 2rem;
   font-weight: 900;
-  background: linear-gradient(135deg, #c8ff00, #a5e000);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-2));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -236,8 +236,8 @@
   width: 40px;
   height: 40px;
   border-radius: var(--radius-md);
-  background: rgba(200, 255, 0, 0.1);
-  border: 1px solid rgba(200, 255, 0, 0.2);
+  background: rgba(var(--color-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--color-primary-rgb), 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -283,8 +283,8 @@
 
 .aic-mode-card.active {
   border-color: var(--color-primary);
-  background: rgba(200, 255, 0, 0.06);
-  box-shadow: 0 0 0 1px rgba(200,255,0,0.12), 0 4px 20px rgba(200,255,0,0.1);
+  background: rgba(var(--color-primary-rgb), 0.06);
+  box-shadow: 0 0 0 1px rgba(var(--color-primary-rgb),0.12), 0 4px 20px rgba(var(--color-primary-rgb),0.1);
 }
 
 .aic-mode-icon {
@@ -301,7 +301,7 @@
 }
 
 .aic-mode-card.active .aic-mode-icon {
-  background: rgba(200, 255, 0, 0.15);
+  background: rgba(var(--color-primary-rgb), 0.15);
   color: var(--color-primary);
 }
 
@@ -364,7 +364,7 @@
   height: 7px;
   border-radius: 50%;
   background: var(--color-primary);
-  box-shadow: 0 0 7px rgba(200,255,0,0.65);
+  box-shadow: 0 0 7px rgba(var(--color-primary-rgb),0.65);
 }
 
 /* 실행 버튼 */
@@ -469,7 +469,7 @@
   flex-shrink: 0;
 }
 
-.aic-prog-badge--increase { background: rgba(200,255,0,0.14); color: var(--color-primary); }
+.aic-prog-badge--increase { background: rgba(var(--color-primary-rgb),0.14); color: var(--color-primary); }
 .aic-prog-badge--hold     { background: rgba(34,211,238,0.12); color: #22d3ee; }
 .aic-prog-badge--decrease { background: rgba(239,68,68,0.12); color: #ef4444; }
 .aic-prog-badge--new      { background: rgba(167,139,250,0.12); color: #a78bfa; }

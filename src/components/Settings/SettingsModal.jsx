@@ -141,6 +141,28 @@ export default function SettingsModal({ open, onClose }) {
           </button>
         </header>
 
+        {/* ─── UI 테마 버전 ─── */}
+        <p className="set-section-label">UI 테마</p>
+        <div className="set-ui-toggle" role="radiogroup" aria-label="UI 테마 버전">
+          {[
+            { id: 'v1', name: 'ver.1', desc: '네온 라임 클래식' },
+            { id: 'v2', name: 'ver.2', desc: '인프라레드' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="radio"
+              aria-checked={settings.uiVersion === t.id}
+              className={`set-ui-option ${t.id}${settings.uiVersion === t.id ? ' active' : ''}`}
+              onClick={() => settings.update({ uiVersion: t.id })}
+            >
+              <span className={`set-ui-swatch ${t.id}`} aria-hidden="true" />
+              <span className="set-ui-name">{t.name}</span>
+              <span className="set-ui-desc">{t.desc}</span>
+            </button>
+          ))}
+        </div>
+
         {/* ─── AI 코치 API 키 ─── */}
         <p className="set-section-label">
           <Sparkles size={12} style={{ display: 'inline', marginRight: 4 }} /> AI 코치 (Gemini)

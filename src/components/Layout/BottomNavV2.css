@@ -1,0 +1,107 @@
+/* ─── v2 플로팅 독 + 센터 FAB ─── */
+.dock-v2 {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  max-width: 392px;
+  height: 66px;
+  display: flex;
+  align-items: stretch;
+  background: rgba(20, 19, 24, 0.86);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  z-index: 100;
+  padding: 0 6px;
+}
+
+.dock-item {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-decoration: none;
+  color: var(--color-text-3);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: color 0.2s ease;
+}
+
+.dock-item svg {
+  stroke-width: 1.8;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+}
+
+.dock-item:active svg { transform: scale(0.85); }
+
+.dock-item.active {
+  color: var(--color-text);
+}
+.dock-item.active svg {
+  color: var(--color-primary);
+  transform: translateY(-1px);
+  filter: drop-shadow(0 0 8px rgba(var(--color-primary-rgb), 0.5));
+}
+
+/* 액티브 도트 인디케이터 */
+.dock-dot {
+  position: absolute;
+  bottom: 7px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.dock-item.active .dock-dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ─── 센터 FAB (운동) ─── */
+.dock-fab {
+  align-self: center;
+  flex-shrink: 0;
+  width: 58px;
+  height: 58px;
+  margin-top: -30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-2));
+  border: none;
+  box-shadow:
+    0 10px 28px rgba(var(--color-primary-rgb), 0.45),
+    0 0 0 7px var(--color-bg);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+
+.dock-fab svg { stroke-width: 2; }
+
+.dock-fab:active { transform: scale(0.92); }
+
+.dock-fab.active {
+  transform: translateY(-3px);
+  box-shadow:
+    0 14px 36px rgba(var(--color-primary-rgb), 0.6),
+    0 0 0 7px var(--color-bg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dock-fab, .dock-item svg, .dock-dot { transition: none; }
+}
