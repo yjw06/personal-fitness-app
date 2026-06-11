@@ -9,6 +9,7 @@ import {
   releaseWakeLock,
   reacquireWakeLockIfNeeded,
   playTickSound,
+  scheduleRestEndNotification,
 } from '../../services/restAlert'
 import { Volume2, VolumeX, Plus, Minus } from 'lucide-react'
 import './RestTimer.css'
@@ -80,6 +81,12 @@ export default function RestTimer() {
     unlockAudio()
     if (settings.wakeLockEnabled) acquireWakeLock()
 
+    // 네이티브(iOS): 종료 시각에 OS 알림 예약 — 잠금화면에서도 정확히 울림
+    if (settings.notifyEnabled) {
+      const exName = workoutData?.[currentIndex]?.exercise_name || ''
+      scheduleRestEndNotification(restEndTime, exName)
+    }
+
     rafRef.current = requestAnimationFrame(tick)
 
     const onVisibility = () => {
@@ -97,7 +104,7 @@ export default function RestTimer() {
       releaseWakeLock()
       clearRestAlert()
     }
-  }, [restEndTime, tick, settings.wakeLockEnabled])
+  }, [restEndTime, tick, settings.wakeLockEnabled, settings.notifyEnabled, workoutData, currentIndex])
 
   // "다음 세트" 누르면 알림 중단 + 다음 세트로
   const handleNext = () => {

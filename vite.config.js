@@ -2,8 +2,9 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// CAP_BUILD=1 → Capacitor 네이티브 빌드 (상대 경로), 기본은 GitHub Pages 경로
 export default defineConfig({
-  base: '/personal-fitness-app/',
+  base: process.env.CAP_BUILD ? './' : '/personal-fitness-app/',
   plugins: [
     react(),
     VitePWA({

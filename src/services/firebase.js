@@ -1,5 +1,11 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
+import {
+  getAuth,
+  initializeAuth,
+  indexedDBLocalPersistence,
+  GoogleAuthProvider,
+} from 'firebase/auth'
+import { Capacitor } from '@capacitor/core'
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -32,5 +38,11 @@ try {
 }
 
 export { db }
-export const auth           = getAuth(app)
+
+// 네이티브(Capacitor)에서는 getAuth() 기본 초기화가 capacitor:// 스킴에서
+// 멈춰버림 → indexedDB persistence로 명시 초기화 (Firebase 공식 권장 패턴)
+export const auth = Capacitor.isNativePlatform()
+  ? initializeAuth(app, { persistence: indexedDBLocalPersistence })
+  : getAuth(app)
+
 export const googleProvider = new GoogleAuthProvider()

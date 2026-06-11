@@ -1,8 +1,11 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from './hooks/useAuth'
 import { useMemoryStore } from './stores/memoryStore'
 import { useAIStore } from './stores/aiStore'
+import { useSettingsStore } from './stores/settingsStore'
+import { toast } from './stores/toastStore'
 import LoginPage      from './pages/LoginPage'
 import WorkoutPage    from './pages/WorkoutPage'
 import MealPage       from './pages/MealPage'
@@ -12,15 +15,42 @@ import VolumePage     from './pages/VolumePage'
 import CoachPage      from './pages/CoachPage'
 import AssistantPage  from './pages/AssistantPage'
 import Header         from './components/Layout/Header'
+import HeaderV2       from './components/Layout/HeaderV2'
 import BottomNav      from './components/Layout/BottomNav'
+import BottomNavV2    from './components/Layout/BottomNavV2'
 import ToastContainer from './components/Toast/ToastContainer'
 import './index.css'
+import './themes/v2.css'
 
 export default function App() {
   const { user, loading } = useAuth()
   const resetMemory   = useMemoryStore((s) => s.reset)
   const loadMemory    = useMemoryStore((s) => s.load)
   const loadAIForUser = useAIStore((s) => s.loadForUser)
+  const uiVersion     = useSettingsStore((s) => s.uiVersion)
+
+  // UI 테마 버전 적용 (v1 클래식 / v2 인프라레드)
+  useEffect(() => {
+    document.documentElement.dataset.ui = uiVersion
+  }, [uiVersion])
+
+  // 네이티브(iOS): 앱 시작 시 알림 권한 요청 (휴식 종료 잠금화면 알림용)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    import('@capacitor/local-notifications')
+      .then(async ({ LocalNotifications }) => {
+        let perm = await LocalNotifications.checkPermissions()
+        if (perm.display !== 'granted') {
+          perm = await LocalNotifications.requestPermissions()
+        }
+        if (perm.display !== 'granted') {
+          toast.warning('알림 권한이 꺼져 있어요. 설정 > 알림 > WORK OUT!에서 허용해 주세요.')
+        }
+      })
+      .catch((e) => {
+        toast.error(`알림 플러그인 오류: ${e?.message || e}`)
+      })
+  }, [])
 
   // 사용자 전환 시 메모리/채팅 격리
   useEffect(() => {
@@ -56,9 +86,9 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter basename="/personal-fitness-app">
+    <BrowserRouter basename={Capacitor.isNativePlatform() ? '/' : '/personal-fitness-app'}>
       <div className="app-layout">
-        <Header user={user} />
+        {uiVersion === 'v2' ? <HeaderV2 /> : <Header user={user} />}
         <ToastContainer />
         <Routes>
           <Route path="/"          element={<Navigate to="/schedule" replace />} />
@@ -71,7 +101,7 @@ export default function App() {
           <Route path="/assistant" element={<AssistantPage />} />
           <Route path="*"          element={<Navigate to="/schedule" replace />} />
         </Routes>
-        <BottomNav />
+        {uiVersion === 'v2' ? <BottomNavV2 /> : <BottomNav />}
       </div>
     </BrowserRouter>
   )

@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { signInWithPopup } from 'firebase/auth'
+import { signInWithPopup, signInWithCredential, GoogleAuthProvider } from 'firebase/auth'
+import { Capacitor } from '@capacitor/core'
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication'
 import { auth, googleProvider } from '../services/firebase'
 import './LoginPage.css'
 
@@ -11,8 +13,18 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     try {
-      await signInWithPopup(auth, googleProvider)
+      if (Capacitor.isNativePlatform()) {
+        // 네이티브(iOS): WebView에서는 구글 OAuth 팝업이 차단됨
+        // → 네이티브 구글 로그인 후 idToken으로 웹 SDK 세션 생성
+        const result = await FirebaseAuthentication.signInWithGoogle()
+        const idToken = result.credential?.idToken
+        if (!idToken) throw new Error('no idToken')
+        await signInWithCredential(auth, GoogleAuthProvider.credential(idToken))
+      } else {
+        await signInWithPopup(auth, googleProvider)
+      }
     } catch (e) {
+      console.error('[login]', e)
       setError('로그인에 실패했습니다. 다시 시도해 주세요.')
     } finally {
       setLoading(false)

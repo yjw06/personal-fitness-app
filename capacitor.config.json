@@ -1,0 +1,22 @@
+{
+  "appId": "com.yjw06.workout",
+  "appName": "WORK OUT!",
+  "webDir": "dist",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0b0a0d"
+  },
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["google.com"]
+    },
+    "LocalNotifications": {
+      "presentationOptions": []
+    },
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#0b0a0d"
+    }
+  }
+}
