@@ -34,6 +34,12 @@ export default function App() {
     document.documentElement.dataset.ui = uiVersion
   }, [uiVersion])
 
+  // 네이티브(iOS): 애플워치 동기화 브리지 초기화
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    import('./services/watchSync').then(({ initWatchSync }) => initWatchSync())
+  }, [])
+
   // 네이티브(iOS): 앱 시작 시 알림 권한 요청 (휴식 종료 잠금화면 알림용)
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return
