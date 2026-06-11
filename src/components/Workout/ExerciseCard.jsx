@@ -124,7 +124,11 @@ export default function ExerciseCard({ exercise, index, isCompleted, isCurrent, 
         <article
           className={`exercise-card ex-card-part ${isCurrent ? 'is-current' : ''} ${isCompleted ? 'is-done' : ''}`}
           style={{ '--part-color': color }}
-          onClick={onClick ? () => { closeSwipe(); onClick() } : undefined}
+          onClick={onClick ? () => {
+            // 스와이프 패널이 열려 있으면 탭은 '닫기'로만 동작
+            if (dragX > 0) { closeSwipe(); return }
+            onClick()
+          } : undefined}
           role={onClick ? 'button' : 'article'}
           tabIndex={onClick ? 0 : undefined}
           onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}

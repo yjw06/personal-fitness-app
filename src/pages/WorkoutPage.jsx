@@ -442,6 +442,8 @@ export default function WorkoutPage() {
                     index={i}
                     isCompleted={isFullyDone(i)}
                     isCurrent={false}
+                    // 카드 탭 → 해당 운동부터 바로 시작 (완료된 운동 제외)
+                    onClick={isFullyDone(i) ? undefined : () => { unlockAudio(); pickExercise(i) }}
                     onWeightStep={(delta) => handleQuickWeightStep(i, delta)}
                     bodyWeight={bodyWeight}
                   />
