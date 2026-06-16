@@ -28,10 +28,12 @@ export function isCardio(exercise) {
 }
 
 // 명시적으로 맨몸 운동인 종목 키워드 (weight_kg 없을 때만 체중 적용)
-const BODYWEIGHT_KEYWORDS = [
+// aiValidate.js의 중량 자동보정도 이 리스트를 공유한다 — 여기만 수정할 것
+export const BODYWEIGHT_KEYWORDS = [
   '팔굽혀펴기', '푸시업', '푸쉬업',
   '딥스',
-  '턱걸이', '풀업',
+  '턱걸이', '풀업', '친업',
+  '맨몸',
   '크런치', '윗몸일으키기', '싯업',
   '버피',
   '플랭크',

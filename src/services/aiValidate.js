@@ -2,11 +2,11 @@
 // 원칙: 산수는 LLM을 믿지 않고 앱이 직접 계산한다.
 // 각 fixer는 { data, issues } 반환 — issues는 사용자에게 보여줄 보정 내역.
 
+import { BODYWEIGHT_KEYWORDS } from '../utils/volumeUtils'
+
 const LOWER_BODY_PARTS = ['하체']
-const BODYWEIGHT_KEYWORDS = [
-  '팔굽혀펴기', '푸시업', '푸쉬업', '턱걸이', '풀업', '친업', '플랭크',
-  '딥스', '크런치', '레그레이즈', '버피', '맨몸', '런지(맨몸)', '스트레칭',
-]
+// 볼륨은 없지만 중량도 필요 없는 종목 (volumeUtils 리스트에 더해 중량 보정만 제외)
+const NO_WEIGHT_KEYWORDS = ['스트레칭']
 
 // 운동명 → 체중 대비 추정 비율 (스키마 프롬프트와 동일 기준)
 const WEIGHT_RATIO_RULES = [
@@ -45,7 +45,9 @@ export function inferBodyWeight(memory = {}) {
 }
 
 export function isBodyweightExercise(name = '') {
-  return BODYWEIGHT_KEYWORDS.some((k) => name.includes(k))
+  const n = name.toLowerCase()
+  return BODYWEIGHT_KEYWORDS.some((k) => n.includes(k)) ||
+    NO_WEIGHT_KEYWORDS.some((k) => n.includes(k))
 }
 
 // ─── 식단 보정 ──────────────────────────────────────────────
@@ -138,6 +140,7 @@ export function fixWorkoutData(data, { bodyWeight = null, progressTargets = {} }
 
     const needsWeight =
       r.body_part !== '러닝' &&
+      r.body_part !== '코어' &&   // volumeUtils와 동일 — 코어는 중량 미지정 시 맨몸 취급
       !isBodyweightExercise(r.exercise_name || '')
 
     if (needsWeight && num(r.weight_kg) == null) {
