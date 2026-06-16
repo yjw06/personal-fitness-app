@@ -23,15 +23,11 @@ html[data-theme='magenta'] {
 html[data-theme='emerald'] {
   --color-primary:#00e08a; --color-primary-rgb:0,224,138;  --color-primary-2:#34f5b0; --color-primary-2-rgb:52,245,176; --color-primary-dark:#022017; --color-accent:#00e08a;
 }
-html[data-theme='sky'] {
-  --color-primary:#3da9ff; --color-primary-rgb:61,169,255; --color-primary-2:#7cc7ff; --color-primary-2-rgb:124,199,255;--color-primary-dark:#06213a; --color-accent:#3da9ff;
-}
 
 /* 밝은 액센트 테마 — 그라디언트 버튼 위 텍스트를 어둡게(대비 확보).
    특이성 (0,2,1) 동률 + 소스 순서 → v2.css 의 color:#fff 를 이긴다. */
 html[data-theme='volt'] .btn-primary,
 html[data-theme='aqua'] .btn-primary,
-html[data-theme='sky'] .btn-primary,
 html[data-theme='emerald'] .btn-primary {
   color:#0a0a0a;
   text-shadow:none;

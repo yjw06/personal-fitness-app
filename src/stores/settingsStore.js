@@ -58,5 +58,4 @@ export const COLOR_THEMES = [
   { id: 'aqua',    name: 'Aqua',    c1: '#00e5ff', c2: '#2effd5' },
   { id: 'magenta', name: 'Magenta', c1: '#ff2e88', c2: '#ff6ad5' },
   { id: 'emerald', name: 'Emerald', c1: '#00e08a', c2: '#34f5b0' },
-  { id: 'sky',     name: 'Sky',     c1: '#3da9ff', c2: '#7cc7ff' },
 ]
