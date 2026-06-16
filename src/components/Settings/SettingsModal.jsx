@@ -3,7 +3,7 @@ import {
   X, Volume2, Vibrate, Bell, Sun, Sparkles, Eye, EyeOff,
   Brain, Upload, Save, Trash2, ChevronDown, ChevronUp,
 } from 'lucide-react'
-import { useSettingsStore } from '../../stores/settingsStore'
+import { useSettingsStore, COLOR_THEMES } from '../../stores/settingsStore'
 import { useMemoryStore, estimateTokens } from '../../stores/memoryStore'
 import { useAIStore } from '../../stores/aiStore'
 import { useAuth } from '../../hooks/useAuth'
@@ -143,24 +143,25 @@ export default function SettingsModal({ open, onClose }) {
           </button>
         </header>
 
-        {/* ─── UI 테마 버전 ─── */}
-        <p className="set-section-label">UI 테마</p>
-        <div className="set-ui-toggle" role="radiogroup" aria-label="UI 테마 버전">
-          {[
-            { id: 'v1', name: 'ver.1', desc: '네온 라임 클래식' },
-            { id: 'v2', name: 'ver.2', desc: '인프라레드' },
-          ].map((t) => (
+        {/* ─── 컬러 테마 ─── */}
+        <p className="set-section-label">컬러 테마</p>
+        <div className="set-theme-grid" role="radiogroup" aria-label="컬러 테마">
+          {COLOR_THEMES.map((t) => (
             <button
               key={t.id}
               type="button"
               role="radio"
-              aria-checked={settings.uiVersion === t.id}
-              className={`set-ui-option ${t.id}${settings.uiVersion === t.id ? ' active' : ''}`}
-              onClick={() => settings.update({ uiVersion: t.id })}
+              aria-checked={settings.colorTheme === t.id}
+              aria-label={t.name}
+              className={`set-theme-option${settings.colorTheme === t.id ? ' active' : ''}`}
+              onClick={() => settings.update({ colorTheme: t.id })}
             >
-              <span className={`set-ui-swatch ${t.id}`} aria-hidden="true" />
-              <span className="set-ui-name">{t.name}</span>
-              <span className="set-ui-desc">{t.desc}</span>
+              <span
+                className="set-theme-swatch"
+                style={{ background: `linear-gradient(135deg, ${t.c1}, ${t.c2})` }}
+                aria-hidden="true"
+              />
+              <span className="set-theme-name">{t.name}</span>
             </button>
           ))}
         </div>
