@@ -17,8 +17,8 @@ const defaults = {
   // AI 코치 모델 (Gemini)
   aiModel: 'gemini-2.5-flash',
 
-  // UI 테마 버전 ('v1' 클래식 라임 | 'v2' 인프라레드)
-  uiVersion: 'v2',
+  // 컬러 테마 (액센트 색) — colors.css 의 data-theme 키와 일치
+  colorTheme: 'ember',
 }
 
 // 저장된 설정 로드
@@ -49,3 +49,13 @@ export const useSettingsStore = create((set, get) => ({
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(defaults)) } catch {}
   },
 }))
+
+// 설정창 스와치 그리드용 테마 메타. id = colors.css 의 data-theme 값.
+export const COLOR_THEMES = [
+  { id: 'ember',   name: 'Ember',   c1: '#ff5c2e', c2: '#ffa62e' },
+  { id: 'volt',    name: 'Volt',    c1: '#c6ff00', c2: '#9be800' },
+  { id: 'indigo',  name: 'Indigo',  c1: '#7c4dff', c2: '#b388ff' },
+  { id: 'aqua',    name: 'Aqua',    c1: '#00e5ff', c2: '#2effd5' },
+  { id: 'magenta', name: 'Magenta', c1: '#ff2e88', c2: '#ff6ad5' },
+  { id: 'emerald', name: 'Emerald', c1: '#00e08a', c2: '#34f5b0' },
+]
