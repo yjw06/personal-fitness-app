@@ -263,7 +263,7 @@ ${outputSpec}
 
 // 마커: 줄 맨 앞 ===KEY=== 형태. 다음 마커 또는 ===END=== 전까지를 블록으로.
 function extractWizardBlock(text, key) {
-  const re = new RegExp(`^===${key}===\\s*$([\\s\\S]*?)(?=^===[A-Z]+===\\s*$|^===END===\\s*$)`, 'm')
+  const re = new RegExp(`^===${key}===\\s*$([\\s\\S]*?)(?=^===[A-Z]+===\\s*$|^===END===\\s*$|$(?![\\s\\S]))`, 'm')
   const m = text.match(re)
   return m ? m[1].trim() : ''
 }

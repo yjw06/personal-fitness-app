@@ -101,4 +101,17 @@ describe('parsePlanWizardResponse', () => {
     expect(r.fields.profile).toBe('프로필만 있음')
     expect(r.fields.workoutPlan).toBe('')
   })
+
+  it('마지막 ===END=== 가 없어도 마지막 블록을 캡처한다', () => {
+    const noEnd = `===PROFILE===
+프로필
+===WORKOUT===
+운동
+===PERSONA===
+페르소나 말투`
+    const r = parsePlanWizardResponse(noEnd, { includeMeal: false })
+    expect(r.ok).toBe(true)
+    expect(r.fields.coachPersona).toBe('페르소나 말투')
+    expect(r.fields.workoutPlan).toBe('운동')
+  })
 })
