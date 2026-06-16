@@ -5,7 +5,7 @@ export const STEPS = [
     title: '나에 대해',
     questions: [
       { key: 'gender', label: '성별', type: 'chip', options: ['남', '여', '비공개'], required: true },
-      { key: 'age', label: '나이', type: 'number', placeholder: '예: 30', required: true },
+      { key: 'age', label: '나이 (만 나이)', type: 'number', placeholder: '예: 만 30세', required: true },
       { key: 'heightCm', label: '키 (cm)', type: 'number', placeholder: '예: 175', required: true },
       { key: 'weightKg', label: '현재 체중 (kg)', type: 'number', placeholder: '예: 78', required: true },
       { key: 'experience', label: '운동 경력', type: 'chip',

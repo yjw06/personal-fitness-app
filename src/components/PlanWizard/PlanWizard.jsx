@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, ArrowLeft, ArrowRight, Copy, Sparkles, Wand2, Save } from 'lucide-react'
+import { X, ArrowLeft, ArrowRight, Copy, ClipboardPaste, Sparkles, Wand2, Save } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useMemoryStore } from '../../stores/memoryStore'
 import { useSettingsStore } from '../../stores/settingsStore'
@@ -54,6 +54,17 @@ export default function PlanWizard({ open, onClose }) {
       toast.success('프롬프트를 복사했습니다. 외부 AI에 붙여넣으세요.')
     } catch {
       toast.error('복사 실패 — 아래 텍스트를 길게 눌러 직접 복사하세요.')
+    }
+  }
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      if (!text.trim()) { toast.error('클립보드가 비어 있어요. AI 답변을 먼저 복사하세요.'); return }
+      setPasteText(text)
+      toast.success('붙여넣었습니다. "분석해서 채우기"를 눌러주세요.')
+    } catch {
+      toast.error('붙여넣기 권한이 없어요 — 입력칸을 길게 눌러 직접 붙여넣으세요.')
     }
   }
 
@@ -195,6 +206,9 @@ export default function PlanWizard({ open, onClose }) {
                 <Copy size={14} /> 프롬프트 복사
               </button>
               <p className="pw-desc">2) AI의 답변 전체를 복사해 여기에 붙여넣으세요.</p>
+              <button className="btn btn-primary pw-copy" onClick={handlePaste}>
+                <ClipboardPaste size={14} /> 클립보드에서 붙여넣기
+              </button>
               <textarea className="pw-paste" placeholder="AI 응답을 붙여넣기…"
                 value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={6} />
             </div>
