@@ -260,3 +260,21 @@ ${facts}
 ${outputSpec}
 ===END===`
 }
+
+// 마커: 줄 맨 앞 ===KEY=== 형태. 다음 마커 또는 ===END=== 전까지를 블록으로.
+function extractWizardBlock(text, key) {
+  const re = new RegExp(`^===${key}===\\s*$([\\s\\S]*?)(?=^===[A-Z]+===\\s*$|^===END===\\s*$)`, 'm')
+  const m = text.match(re)
+  return m ? m[1].trim() : ''
+}
+
+export function parsePlanWizardResponse(text, { includeMeal = true } = {}) {
+  const safe = String(text || '')
+  const profile      = extractWizardBlock(safe, 'PROFILE')
+  const workoutPlan  = extractWizardBlock(safe, 'WORKOUT')
+  const mealPlan     = includeMeal ? extractWizardBlock(safe, 'MEAL') : ''
+  const coachPersona = extractWizardBlock(safe, 'PERSONA')
+
+  const ok = !!(profile || workoutPlan || mealPlan || coachPersona)
+  return { ok, fields: { profile, workoutPlan, mealPlan, coachPersona } }
+}
