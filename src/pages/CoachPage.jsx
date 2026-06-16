@@ -18,6 +18,7 @@ import {
   COMMANDS, parseCommand, searchCommands, buildHelpMessage,
 } from '../services/aiCommands'
 import { Send, Trash2, Sparkles, AlertCircle, Brain, RefreshCw, ExternalLink, Wrench } from 'lucide-react'
+import PlanWizard from '../components/PlanWizard/PlanWizard'
 import './CoachPage.css'
 
 export default function CoachPage() {
@@ -44,6 +45,7 @@ export default function CoachPage() {
   const [extraNotes, setExtraNotes] = useState('')   // 오늘만의 특이사항 (빈 채팅 화면 textarea)
   const [cmdMenuOpen, setCmdMenuOpen] = useState(false)
   const [cmdMenuIdx, setCmdMenuIdx]   = useState(0)
+  const [wizardOpen, setWizardOpen] = useState(false)
   const scrollRef = useRef(null)
   const inputRef  = useRef(null)
 
@@ -485,7 +487,9 @@ export default function CoachPage() {
               <span className="cmb-items">{memoryItems.join(' · ')}</span>
             </>
           ) : (
-            <span className="cmb-label">메모리 없음 — 설정에서 마스터플랜 등록</span>
+            <button className="cmb-cta" onClick={() => setWizardOpen(true)}>
+              ✨ AI로 내 맞춤 플랜 만들기
+            </button>
           )}
           <button
             className="cmb-refresh"
@@ -646,6 +650,8 @@ export default function CoachPage() {
           {isLoading ? <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> : <Send size={16} />}
         </button>
       </div>
+
+      <PlanWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
     </main>
   )
 }
