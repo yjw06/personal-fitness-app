@@ -194,6 +194,31 @@ async function callWithRetry({ apiKey, model, body, onModelSwitch }) {
   throw lastErr || new Error('Gemini 호출 실패')
 }
 
+// 평문 텍스트 응답용 (PlanWizard 등 — JSON 스키마 불필요)
+export async function callGeminiText({ apiKey, model = DEFAULT_MODEL, prompt, maxOutputTokens = 8192 }) {
+  const body = {
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.7,
+      topP: 0.95,
+      maxOutputTokens,
+      ...(thinkingConfigFor(model) ? { thinkingConfig: thinkingConfigFor(model) } : {}),
+    },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HARASSMENT',        threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HATE_SPEECH',       threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
+  }
+  const response = await callWithRetry({ apiKey, model, body })
+  const candidate = response?.candidates?.[0]
+  const parts = candidate?.content?.parts || []
+  const text = parts.filter((p) => p.text).map((p) => p.text).join('')
+  if (!text) throw new Error(emptyResponseMessage(candidate?.finishReason || ''))
+  return text
+}
+
 // ─── JSON 모드 ─────────────────────────────────────────────
 // Gemini responseSchema로 구조화 출력 강제 → 도구 호출 X, 환각 X
 // JSON 파싱 실패/응답 잘림 시 자동 재시도

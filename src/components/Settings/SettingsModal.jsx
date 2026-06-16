@@ -10,6 +10,7 @@ import { useAuth } from '../../hooks/useAuth'
 import { requestNotifyPermission } from '../../services/restAlert'
 import { AVAILABLE_MODELS } from '../../services/aiCoach'
 import { toast } from '../../stores/toastStore'
+import PlanWizard from '../PlanWizard/PlanWizard'
 import './SettingsModal.css'
 
 export default function SettingsModal({ open, onClose }) {
@@ -27,6 +28,7 @@ export default function SettingsModal({ open, onClose }) {
   const [showKey, setShowKey] = useState(false)
   const [planExpanded, setPlanExpanded] = useState(false)
   const [notesExpanded, setNotesExpanded] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
 
   // memory store 데이터가 로드되면 input에 반영
   useEffect(() => {
@@ -260,6 +262,10 @@ export default function SettingsModal({ open, onClose }) {
               .md/.txt 파일을 통째로 불러올 수 있어요.
             </p>
 
+            <button className="btn btn-primary set-wizard-btn" onClick={() => setWizardOpen(true)}>
+              <Sparkles size={14} /> 질문으로 맞춤 플랜 만들기
+            </button>
+
             <PlanTextArea
               label="사용자 프로필"
               hint="나이, 키, 체중, 목표 등"
@@ -410,6 +416,8 @@ export default function SettingsModal({ open, onClose }) {
           닫기
         </button>
       </div>
+
+      <PlanWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
     </div>
   )
 }
