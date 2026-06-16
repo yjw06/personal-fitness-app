@@ -1,0 +1,55 @@
+.pw-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.6);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.pw-modal {
+  width: 100%; max-width: 480px; max-height: 90vh;
+  display: flex; flex-direction: column;
+  background: var(--surface, #1a1a1a); color: var(--text, #fff);
+  border-radius: 16px; overflow: hidden;
+}
+.pw-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.pw-header h2 { display: flex; align-items: center; gap: 6px; font-size: 16px; margin: 0; }
+.pw-progress { padding: 10px 16px 0; font-size: 13px; opacity: .7; }
+.pw-body { padding: 12px 16px; overflow-y: auto; flex: 1; }
+.pw-desc { font-size: 13px; opacity: .8; margin: 4px 0 8px; }
+.pw-q { margin-bottom: 14px; }
+.pw-q-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.pw-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.pw-chip {
+  padding: 7px 12px; border-radius: 999px; font-size: 13px;
+  border: 1px solid rgba(255,255,255,.18); background: transparent; color: inherit;
+}
+.pw-chip.on { background: var(--accent, #c6ff00); color: #000; border-color: transparent; }
+.pw-input {
+  width: 100%; padding: 9px 11px; border-radius: 10px; font-size: 14px;
+  border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); color: inherit;
+}
+.pw-preview, .pw-prompt, .pw-paste {
+  width: 100%; border-radius: 10px; font-size: 13px; resize: vertical;
+  border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); color: inherit;
+  padding: 9px 11px; font-family: inherit;
+}
+.pw-prompt { background: rgba(255,255,255,.02); margin-bottom: 8px; }
+.pw-copy { margin-bottom: 14px; }
+.pw-footer {
+  display: flex; justify-content: space-between; gap: 8px;
+  padding: 12px 16px; border-top: 1px solid rgba(255,255,255,.08);
+}
+.pw-route {
+  border: 1px solid rgba(255,255,255,.14); border-radius: 12px;
+  padding: 12px; margin-bottom: 12px; position: relative;
+}
+.pw-route h3 { display: flex; align-items: center; gap: 6px; font-size: 14px; margin: 0 0 6px; }
+.pw-route p { font-size: 12px; opacity: .75; margin: 0 0 10px; }
+.pw-route-rec { border-color: var(--accent, #c6ff00); }
+.pw-route-badge {
+  position: absolute; top: -9px; right: 12px;
+  background: var(--accent, #c6ff00); color: #000;
+  font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+}
