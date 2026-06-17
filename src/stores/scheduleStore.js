@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { fetchSchedule, saveScheduleData } from '../services/csvService'
 import { todayYMD } from '../utils/dateUtils'
 
-const timeToMinutes = (timeStr) => {
+export const timeToMinutes = (timeStr) => {
   if (!timeStr) return Infinity
   const [h, m] = timeStr.split(':').map(Number)
   if (isNaN(h) || isNaN(m)) return Infinity
