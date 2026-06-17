@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  /* 입력창은 fixed, 스크롤은 메시지 영역에서 */
-  padding-bottom: calc(var(--nav-height) + 80px);
+  /* 입력창은 fixed, 스크롤은 메시지 영역에서 (safe-area 포함해 마지막 메시지 가림 방지) */
+  padding-bottom: calc(var(--nav-height) + 80px + env(safe-area-inset-bottom, 0px));
 }
 
 .coach-header {
@@ -598,7 +598,8 @@
 /* 입력창 (하단 고정) */
 .coach-input-row {
   position: fixed;
-  bottom: var(--nav-height);
+  /* 하단 독이 safe-area-inset 만큼 더 올라오므로 입력창도 그만큼 띄워 가림 방지 */
+  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   max-width: 420px;
