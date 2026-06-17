@@ -4,13 +4,7 @@ import {
   fetchMemory, saveMemory,
   fetchAllBody, fetchWorkoutRange,
 } from '../services/csvService'
-
-const todayYmd = () => new Date().toISOString().slice(0, 10).replace(/-/g, '')
-const ymdMinusDays = (d) => {
-  const date = new Date()
-  date.setDate(date.getDate() - d)
-  return date.toISOString().slice(0, 10).replace(/-/g, '')
-}
+import { todayYMD as todayYmd, ymdMinusDays } from '../utils/dateUtils'
 
 // 한국어 토큰 추정: 글자수 ÷ 2 (대략적, 안전하게 overestimate)
 export function estimateTokens(text) {

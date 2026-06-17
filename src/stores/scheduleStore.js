@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { fetchSchedule, saveScheduleData } from '../services/csvService'
+import { todayYMD } from '../utils/dateUtils'
 
 const timeToMinutes = (timeStr) => {
   if (!timeStr) return Infinity
@@ -28,7 +29,7 @@ export const useScheduleStore = create((set, get) => ({
     }))
 
     // 오늘 날짜 스케줄이면 시간이 지난 항목 즉시 완료 처리
-    const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    const todayStr = todayYMD()
     if (date === todayStr && normalized.length > 0) {
       const now = new Date()
       const currentMinutes = now.getHours() * 60 + now.getMinutes()

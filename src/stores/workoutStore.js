@@ -1,14 +1,15 @@
 import { create } from 'zustand'
 import { saveWorkoutProgress } from '../services/csvService'
+import { todayYMD } from '../utils/dateUtils'
 
 // localStorage에서 선택 날짜 복원 (탭 이동 후에도 유지)
 const STORAGE_KEY = 'selectedDate_v1'
-const todayYMD = () => new Date().toISOString().slice(0, 10).replace(/-/g, '')
 
 const initialDate = (() => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored && /^\d{8}$/.test(stored)) return stored
+    // 같은 날에 한해 복원 — 날짜가 바뀌면 자동으로 오늘로 롤오버
+    if (stored && /^\d{8}$/.test(stored) && stored === todayYMD()) return stored
   } catch {}
   return todayYMD()
 })()

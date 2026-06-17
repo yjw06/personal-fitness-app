@@ -5,6 +5,7 @@ import {
   saveBodyData, fetchBody, deleteBody,
 } from '../services/csvService'
 import { useWorkoutStore } from '../stores/workoutStore'
+import { todayYMD } from '../utils/dateUtils'
 import { toast } from '../stores/toastStore'
 import { useSelection } from '../hooks/useSelection'
 import SelectionToolbar from '../components/Selection/SelectionToolbar'
@@ -208,7 +209,7 @@ export default function BodyPage() {
               <input
                 type="date"
                 value={ymdToISO(form.date)}
-                max={ymdToISO(new Date().toISOString().slice(0, 10).replace(/-/g, ''))}
+                max={ymdToISO(todayYMD())}
                 onChange={(e) => setForm({ ...form, date: isoToYmd(e.target.value) })}
                 required
               />

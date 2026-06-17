@@ -10,6 +10,7 @@ import SelectionToolbar from '../components/Selection/SelectionToolbar'
 import EntryModal from '../components/EntryModal/EntryModal'
 import ScheduleForm from '../components/EntryModal/ScheduleForm'
 import { categorizeActivity, formatRelativeToNow } from '../utils/scheduleCategory'
+import { todayYMD as todayYmd } from '../utils/dateUtils'
 import { format, startOfWeek, addDays, isToday } from 'date-fns'
 import { ko } from 'date-fns/locale'
 import { Upload, RefreshCw, Check, Plus, Pencil } from 'lucide-react'
@@ -17,10 +18,6 @@ import '../components/Selection/SelectionToolbar.css'
 import './SchedulePage.css'
 
 const DAY_LABELS = ['월', '화', '수', '목', '금', '토', '일']
-
-function todayYmd() {
-  return new Date().toISOString().slice(0, 10).replace(/-/g, '')
-}
 
 // YYYYMMDD → Date
 function ymdToDate(ymd) {
