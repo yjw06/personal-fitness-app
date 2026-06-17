@@ -14,6 +14,7 @@ import {
 } from '../utils/volumeUtils'
 import LineChart from '../components/Chart/LineChart'
 import BarChart  from '../components/Chart/BarChart'
+import ApiKeyNotice from '../components/Ai/ApiKeyNotice'
 import { Sparkles, TrendingUp, Check, RefreshCw } from 'lucide-react'
 import './VolumePage.css'
 
@@ -375,6 +376,13 @@ ${lines}`
               <><TrendingUp size={15} /> 목표 중량 계산하기</>
             )}
           </button>
+
+          {/* 키 없을 때 안내 (앱은 키 없이도 동작, AI 분석만 키 필요) */}
+          {!apiKey && (
+            <div style={{ marginTop: 12 }}>
+              <ApiKeyNotice feature="AI 볼륨 분석" />
+            </div>
+          )}
 
           {/* 에러 */}
           {aiMode === 'volume' && aiError && (

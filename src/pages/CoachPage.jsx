@@ -17,8 +17,9 @@ import { getJobConfig, kindLabel } from '../services/aiSchemas'
 import {
   COMMANDS, parseCommand, searchCommands, buildHelpMessage,
 } from '../services/aiCommands'
-import { Send, Trash2, Sparkles, AlertCircle, Brain, RefreshCw, ExternalLink, Wrench } from 'lucide-react'
+import { Send, Trash2, Sparkles, Brain, RefreshCw, ExternalLink, Wrench } from 'lucide-react'
 import PlanWizard from '../components/PlanWizard/PlanWizard'
+import ApiKeyNotice from '../components/Ai/ApiKeyNotice'
 import './CoachPage.css'
 
 export default function CoachPage() {
@@ -509,23 +510,8 @@ export default function CoachPage() {
       </Link>
 
       {!apiKey && isLoaded && (
-        <div className="coach-no-key card animate-fadeInUp">
-          <AlertCircle size={18} color="var(--color-warning)" />
-          <div>
-            <p style={{ color: 'var(--color-text)', marginBottom: 4 }}>
-              <strong>Gemini API 키를 설정에서 등록해주세요.</strong>
-            </p>
-            <p style={{ fontSize: '0.75rem' }}>
-              <a
-                href="https://aistudio.google.com/apikey"
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: 'var(--color-primary)' }}
-              >
-                aistudio.google.com/apikey
-              </a> 에서 무료로 발급 가능합니다.
-            </p>
-          </div>
+        <div style={{ padding: '0 16px' }}>
+          <ApiKeyNotice feature="AI 코치" />
         </div>
       )}
 

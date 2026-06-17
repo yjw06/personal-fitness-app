@@ -16,6 +16,7 @@ import CoachPage      from './pages/CoachPage'
 import AssistantPage  from './pages/AssistantPage'
 import HeaderV2       from './components/Layout/HeaderV2'
 import BottomNavV2    from './components/Layout/BottomNavV2'
+import InstallPrompt  from './components/Layout/InstallPrompt'
 import ToastContainer from './components/Toast/ToastContainer'
 import './index.css'
 import './themes/v2.css'
@@ -102,6 +103,7 @@ export default function App() {
           <Route path="*"          element={<Navigate to="/schedule" replace />} />
         </Routes>
         <BottomNavV2 />
+        <InstallPrompt />
       </div>
     </BrowserRouter>
   )
