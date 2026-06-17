@@ -245,7 +245,8 @@ html[data-ui='v2'] select:focus {
 
 /* ─── 코치 입력바 — 독 위 글래스 필 ─── */
 html[data-ui='v2'] .coach-input-row {
-  bottom: calc(var(--nav-height) - 8px);
+  /* 독이 safe-area-inset 만큼 더 올라오므로 입력창도 그만큼 띄움 (홈 인디케이터 기기 가림 방지) */
+  bottom: calc(var(--nav-height) - 8px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ─── 모션 줄이기 존중 ─── */
