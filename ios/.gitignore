@@ -1,7 +1,6 @@
 App/build
 App/Pods
 App/output
-App/App/public
 DerivedData
 xcuserdata
 
@@ -9,5 +8,8 @@ xcuserdata
 capacitor-cordova-ios-plugins
 
 # Generated Config files
-App/App/capacitor.config.json
 App/App/config.xml
+
+# 지인 자가 빌드 편의: 웹 빌드 결과(public)와 런타임 설정을 커밋해
+# Node/npm 없이 Xcode만으로 빌드 가능하게 한다. (공유 전 npm run ios:build 로 갱신)
+# App/App/public, App/App/capacitor.config.json 는 의도적으로 추적함
